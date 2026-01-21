@@ -1,5 +1,5 @@
 // admin-firebase.js
-// Panel de administración con Firebase
+// Panel de administración con Firebase Realtime Database
 
 // Variables globales
 let storeData = {
@@ -119,23 +119,38 @@ function updateCounterStyle(counter, length, maxLength) {
     }
 }
 
-// Cargar todos los datos desde Firebase
+// Cargar todos los datos desde Firebase Realtime Database
 async function loadAllDataFromFirebase() {
     try {
-        console.log("Cargando datos desde Firebase...");
+        console.log("Cargando datos desde Firebase Realtime Database...");
         
         // Cargar datos de la tienda
         const storeSnapshot = await db.getStoreData();
         if (storeSnapshot.exists()) {
-            storeData = storeSnapshot.val();
+            const firebaseData = storeSnapshot.val();
+            // Combina con datos por defecto para mantener estructura completa
+            storeData = { ...storeData, ...firebaseData };
             console.log("Datos de tienda cargados desde Firebase:", storeData);
+        } else {
+            console.log("No hay datos de tienda en Firebase, usando datos por defecto");
         }
         
         // Cargar categorías
         const categoriesSnapshot = await db.getCategories();
         if (categoriesSnapshot.exists()) {
             const cats = categoriesSnapshot.val();
-            categories = cats ? Object.values(cats) : [];
+            // Convierte objeto a array
+            categories = [];
+            if (cats) {
+                Object.keys(cats).forEach(key => {
+                    // Mantener el ID del objeto (key) y los datos
+                    categories.push({ 
+                        firebaseKey: key, // Guardamos la clave de Firebase
+                        id: cats[key].id || key, // Usar id del objeto o la clave
+                        ...cats[key] 
+                    });
+                });
+            }
             console.log("Categorías cargadas desde Firebase:", categories.length);
         }
         
@@ -143,23 +158,65 @@ async function loadAllDataFromFirebase() {
         const productsSnapshot = await db.getProducts();
         if (productsSnapshot.exists()) {
             const prods = productsSnapshot.val();
-            products = prods ? Object.values(prods) : [];
+            // Convierte objeto a array
+            products = [];
+            if (prods) {
+                Object.keys(prods).forEach(key => {
+                    const productData = prods[key];
+                    // Asegurar que price y originalPrice sean números
+                    products.push({ 
+                        firebaseKey: key,
+                        id: productData.id || key,
+                        name: productData.name || '',
+                        category: productData.category || '',
+                        price: parseFloat(productData.price) || 0,
+                        originalPrice: productData.originalPrice ? parseFloat(productData.originalPrice) : null,
+                        description: productData.description || '',
+                        images: productData.images || []
+                    });
+                });
+            }
             console.log("Productos cargados desde Firebase:", products.length);
         }
         
-        // Cargar promociones
-        const promotionsSnapshot = await db.getPromotions();
-        if (promotionsSnapshot.exists()) {
-            const proms = promotionsSnapshot.val();
-            promotions = proms ? Object.values(proms) : [];
-            console.log("Promociones cargadas desde Firebase:", promotions.length);
+        // Cargar promociones (si existe el nodo)
+        try {
+            const promotionsSnapshot = await db.getPromotions();
+            if (promotionsSnapshot.exists()) {
+                const proms = promotionsSnapshot.val();
+                // Convierte objeto a array
+                promotions = [];
+                if (proms) {
+                    Object.keys(proms).forEach(key => {
+                        promotions.push({ 
+                            firebaseKey: key,
+                            id: proms[key].id || key,
+                            ...proms[key] 
+                        });
+                    });
+                }
+                console.log("Promociones cargadas desde Firebase:", promotions.length);
+            }
+        } catch (promoError) {
+            console.log("No hay promociones en Firebase:", promoError);
+            promotions = [];
         }
         
         // Cargar slides
         const slidesSnapshot = await db.getSlides();
         if (slidesSnapshot.exists()) {
             const sls = slidesSnapshot.val();
-            heroSlides = sls ? Object.values(sls) : [];
+            // Convierte objeto a array
+            heroSlides = [];
+            if (sls) {
+                Object.keys(sls).forEach(key => {
+                    heroSlides.push({ 
+                        firebaseKey: key,
+                        id: sls[key].id || key,
+                        ...sls[key] 
+                    });
+                });
+            }
             console.log("Slides cargados desde Firebase:", heroSlides.length);
         }
         
@@ -196,8 +253,16 @@ async function saveStoreDataToFirebase() {
 // Guardar categoría en Firebase
 async function saveCategoryToFirebase(category) {
     try {
-        await db.saveCategory(category.id, category);
-        console.log("Categoría guardada en Firebase:", category.id);
+        // Si tenemos una clave de Firebase existente, usarla
+        const key = category.firebaseKey || category.id;
+        const categoryData = {
+            id: category.id,
+            name: category.name,
+            image: category.image
+        };
+        
+        await db.saveCategory(key, categoryData);
+        console.log("Categoría guardada en Firebase:", key);
         return true;
     } catch (error) {
         console.error("Error guardando categoría en Firebase:", error);
@@ -208,8 +273,20 @@ async function saveCategoryToFirebase(category) {
 // Guardar producto en Firebase
 async function saveProductToFirebase(product) {
     try {
-        await db.saveProduct(product.id, product);
-        console.log("Producto guardado en Firebase:", product.id);
+        // Si tenemos una clave de Firebase existente, usarla
+        const key = product.firebaseKey || product.id;
+        const productData = {
+            id: product.id,
+            name: product.name,
+            category: product.category,
+            price: product.price,
+            originalPrice: product.originalPrice || null,
+            description: product.description,
+            images: product.images
+        };
+        
+        await db.saveProduct(key, productData);
+        console.log("Producto guardado en Firebase:", key);
         return true;
     } catch (error) {
         console.error("Error guardando producto en Firebase:", error);
@@ -220,8 +297,17 @@ async function saveProductToFirebase(product) {
 // Guardar promoción en Firebase
 async function savePromotionToFirebase(promotion) {
     try {
-        await db.savePromotion(promotion.id, promotion);
-        console.log("Promoción guardada en Firebase:", promotion.id);
+        // Si tenemos una clave de Firebase existente, usarla
+        const key = promotion.firebaseKey || promotion.id;
+        const promotionData = {
+            id: promotion.id,
+            title: promotion.title,
+            description: promotion.description,
+            active: promotion.active || true
+        };
+        
+        await db.savePromotion(key, promotionData);
+        console.log("Promoción guardada en Firebase:", key);
         return true;
     } catch (error) {
         console.error("Error guardando promoción en Firebase:", error);
@@ -232,8 +318,17 @@ async function savePromotionToFirebase(promotion) {
 // Guardar slide en Firebase
 async function saveSlideToFirebase(slide) {
     try {
-        await db.saveSlide(slide.id, slide);
-        console.log("Slide guardado en Firebase:", slide.id);
+        // Si tenemos una clave de Firebase existente, usarla
+        const key = slide.firebaseKey || slide.id;
+        const slideData = {
+            id: slide.id,
+            title: slide.title,
+            description: slide.description,
+            image: slide.image
+        };
+        
+        await db.saveSlide(key, slideData);
+        console.log("Slide guardado en Firebase:", key);
         return true;
     } catch (error) {
         console.error("Error guardando slide en Firebase:", error);
@@ -248,13 +343,13 @@ async function uploadImageToFirebase(file, type, productId = null) {
         
         switch(type) {
             case 'logo':
-                path = 'store/logo';
+                path = 'tienda/logo';
                 break;
             case 'category':
-                path = 'categories';
+                path = 'categorias';
                 break;
             case 'product':
-                path = `products/${productId || 'temp'}`;
+                path = `productos/${productId || 'temp'}`;
                 break;
             case 'slide':
                 path = 'slides';
@@ -278,8 +373,12 @@ async function uploadImageToFirebase(file, type, productId = null) {
 // Eliminar categoría de Firebase
 async function deleteCategoryFromFirebase(categoryId) {
     try {
-        await db.deleteCategory(categoryId);
-        console.log("Categoría eliminada de Firebase:", categoryId);
+        // Buscar la categoría para obtener la clave de Firebase
+        const category = categories.find(c => c.id === categoryId || c.firebaseKey === categoryId);
+        const key = category?.firebaseKey || categoryId;
+        
+        await db.deleteCategory(key);
+        console.log("Categoría eliminada de Firebase:", key);
         return true;
     } catch (error) {
         console.error("Error eliminando categoría de Firebase:", error);
@@ -290,8 +389,12 @@ async function deleteCategoryFromFirebase(categoryId) {
 // Eliminar producto de Firebase
 async function deleteProductFromFirebase(productId) {
     try {
-        await db.deleteProduct(productId);
-        console.log("Producto eliminada de Firebase:", productId);
+        // Buscar el producto para obtener la clave de Firebase
+        const product = products.find(p => p.id === productId || p.firebaseKey === productId);
+        const key = product?.firebaseKey || productId;
+        
+        await db.deleteProduct(key);
+        console.log("Producto eliminado de Firebase:", key);
         return true;
     } catch (error) {
         console.error("Error eliminando producto de Firebase:", error);
@@ -302,8 +405,12 @@ async function deleteProductFromFirebase(productId) {
 // Eliminar promoción de Firebase
 async function deletePromotionFromFirebase(promotionId) {
     try {
-        await db.deletePromotion(promotionId);
-        console.log("Promoción eliminada de Firebase:", promotionId);
+        // Buscar la promoción para obtener la clave de Firebase
+        const promotion = promotions.find(p => p.id === promotionId || p.firebaseKey === promotionId);
+        const key = promotion?.firebaseKey || promotionId;
+        
+        await db.deletePromotion(key);
+        console.log("Promoción eliminada de Firebase:", key);
         return true;
     } catch (error) {
         console.error("Error eliminando promoción de Firebase:", error);
@@ -314,8 +421,12 @@ async function deletePromotionFromFirebase(promotionId) {
 // Eliminar slide de Firebase
 async function deleteSlideFromFirebase(slideId) {
     try {
-        await db.deleteSlide(slideId);
-        console.log("Slide eliminada de Firebase:", slideId);
+        // Buscar el slide para obtener la clave de Firebase
+        const slide = heroSlides.find(s => s.id === slideId || s.firebaseKey === slideId);
+        const key = slide?.firebaseKey || slideId;
+        
+        await db.deleteSlide(key);
+        console.log("Slide eliminado de Firebase:", key);
         return true;
     } catch (error) {
         console.error("Error eliminando slide de Firebase:", error);
@@ -838,7 +949,7 @@ function openCategoryModal(categoryId = null) {
     if (categoryId) {
         // Modo edición
         title.innerHTML = '<i class="fas fa-edit"></i> Editar Categoría';
-        const category = categories.find(c => c.id == categoryId);
+        const category = categories.find(c => c.id == categoryId || c.firebaseKey == categoryId);
         
         if (category) {
             categoryNameInput.value = category.name;
@@ -899,7 +1010,11 @@ async function saveCategory() {
         return;
     }
     
+    // Buscar si ya existe para obtener la clave de Firebase
+    const existingCategory = categories.find(c => c.id === id || c.firebaseKey === categoryIdInput.value);
+    
     const category = {
+        firebaseKey: existingCategory?.firebaseKey,
         id: id,
         name: name,
         image: image
@@ -911,7 +1026,7 @@ async function saveCategory() {
         // Actualizar lista local
         if (categoryIdInput.value) {
             // Editar
-            const index = categories.findIndex(c => c.id == id);
+            const index = categories.findIndex(c => c.id == id || c.firebaseKey === existingCategory?.firebaseKey);
             if (index !== -1) {
                 categories[index] = category;
             }
@@ -1046,7 +1161,7 @@ function openProductModal(productId = null) {
     if (productId) {
         // Modo edición
         title.innerHTML = '<i class="fas fa-edit"></i> Editar Producto';
-        const product = products.find(p => p.id == productId);
+        const product = products.find(p => p.id == productId || p.firebaseKey == productId);
         
         if (product) {
             productNameInput.value = product.name;
@@ -1176,7 +1291,11 @@ async function saveProduct() {
             }
         }
         
+        // Buscar si ya existe para obtener la clave de Firebase
+        const existingProduct = products.find(p => p.id === id || p.firebaseKey === productIdInput.value);
+        
         const product = {
+            firebaseKey: existingProduct?.firebaseKey,
             id: id,
             name: name,
             category: category,
@@ -1191,7 +1310,7 @@ async function saveProduct() {
         // Actualizar lista local
         if (productIdInput.value) {
             // Editar
-            const index = products.findIndex(p => p.id == id);
+            const index = products.findIndex(p => p.id == id || p.firebaseKey === existingProduct?.firebaseKey);
             if (index !== -1) {
                 products[index] = product;
             }
@@ -1331,7 +1450,7 @@ function openPromotionModal(promotionId = null) {
     if (promotionId) {
         // Modo edición
         title.innerHTML = '<i class="fas fa-edit"></i> Editar Promoción';
-        const promotion = promotions.find(p => p.id == promotionId);
+        const promotion = promotions.find(p => p.id == promotionId || p.firebaseKey == promotionId);
         
         if (promotion) {
             promotionTitleInput.value = promotion.title;
@@ -1389,7 +1508,11 @@ async function savePromotion() {
         return;
     }
     
+    // Buscar si ya existe para obtener la clave de Firebase
+    const existingPromotion = promotions.find(p => p.id === id || p.firebaseKey === promotionIdInput.value);
+    
     const promotion = {
+        firebaseKey: existingPromotion?.firebaseKey,
         id: id,
         title: title,
         description: description,
@@ -1402,7 +1525,7 @@ async function savePromotion() {
         // Actualizar lista local
         if (promotionIdInput.value) {
             // Editar
-            const index = promotions.findIndex(p => p.id == id);
+            const index = promotions.findIndex(p => p.id == id || p.firebaseKey === existingPromotion?.firebaseKey);
             if (index !== -1) {
                 promotions[index] = promotion;
             }
@@ -1503,7 +1626,7 @@ function openSlideModal(slideId = null) {
     if (slideId) {
         // Modo edición
         title.innerHTML = '<i class="fas fa-edit"></i> Editar Slide';
-        const slide = heroSlides.find(s => s.id == slideId);
+        const slide = heroSlides.find(s => s.id == slideId || s.firebaseKey == slideId);
         
         if (slide) {
             slideTitleInput.value = slide.title;
@@ -1576,7 +1699,11 @@ async function saveSlide() {
         return;
     }
     
+    // Buscar si ya existe para obtener la clave de Firebase
+    const existingSlide = heroSlides.find(s => s.id === id || s.firebaseKey === slideIdInput.value);
+    
     const slide = {
+        firebaseKey: existingSlide?.firebaseKey,
         id: id,
         title: title,
         description: description,
@@ -1589,7 +1716,7 @@ async function saveSlide() {
         // Actualizar lista local
         if (slideIdInput.value) {
             // Editar
-            const index = heroSlides.findIndex(s => s.id == id);
+            const index = heroSlides.findIndex(s => s.id == id || s.firebaseKey === existingSlide?.firebaseKey);
             if (index !== -1) {
                 heroSlides[index] = slide;
             }
@@ -1683,7 +1810,7 @@ function setupTableEvents(container, type) {
         const deleteBtn = target.closest('.delete-btn');
         
         if (editBtn) {
-            const itemId = parseInt(editBtn.getAttribute('data-id'));
+            const itemId = parseInt(editBtn.getAttribute('data-id')) || editBtn.getAttribute('data-id');
             if (type === 'category') {
                 openCategoryModal(itemId);
             } else if (type === 'product') {
@@ -1692,7 +1819,7 @@ function setupTableEvents(container, type) {
         }
         
         if (deleteBtn) {
-            const itemId = parseInt(deleteBtn.getAttribute('data-id'));
+            const itemId = parseInt(deleteBtn.getAttribute('data-id')) || deleteBtn.getAttribute('data-id');
             const itemType = deleteBtn.getAttribute('data-type');
             showDeleteConfirmation(itemId, itemType);
         }
@@ -1707,7 +1834,7 @@ function setupCardEvents(container, type) {
         const deleteBtn = target.closest('.delete-btn');
         
         if (editBtn) {
-            const itemId = parseInt(editBtn.getAttribute('data-id'));
+            const itemId = parseInt(editBtn.getAttribute('data-id')) || editBtn.getAttribute('data-id');
             if (type === 'promotion') {
                 openPromotionModal(itemId);
             } else if (type === 'slide') {
@@ -1716,7 +1843,7 @@ function setupCardEvents(container, type) {
         }
         
         if (deleteBtn) {
-            const itemId = parseInt(deleteBtn.getAttribute('data-id'));
+            const itemId = parseInt(deleteBtn.getAttribute('data-id')) || deleteBtn.getAttribute('data-id');
             const itemType = deleteBtn.getAttribute('data-type');
             showDeleteConfirmation(itemId, itemType);
         }
@@ -1737,7 +1864,7 @@ function showDeleteConfirmation(itemId, itemType) {
     // Obtener el nombre del item según el tipo
     switch (itemType) {
         case 'category':
-            const category = categories.find(c => c.id == itemId);
+            const category = categories.find(c => c.id == itemId || c.firebaseKey == itemId);
             if (category) {
                 itemName = category.name;
                 message = `¿Está seguro de que desea eliminar la categoría "${itemName}"? Los productos asociados se marcarán como "Sin categoría".`;
@@ -1745,7 +1872,7 @@ function showDeleteConfirmation(itemId, itemType) {
             break;
             
         case 'product':
-            const product = products.find(p => p.id == itemId);
+            const product = products.find(p => p.id == itemId || p.firebaseKey == itemId);
             if (product) {
                 itemName = product.name;
                 message = `¿Está seguro de que desea eliminar el producto "${itemName}"? Esta acción no se puede deshacer.`;
@@ -1753,7 +1880,7 @@ function showDeleteConfirmation(itemId, itemType) {
             break;
             
         case 'promotion':
-            const promotion = promotions.find(p => p.id == itemId);
+            const promotion = promotions.find(p => p.id == itemId || p.firebaseKey == itemId);
             if (promotion) {
                 itemName = promotion.title;
                 message = `¿Está seguro de que desea eliminar la promoción "${itemName}"?`;
@@ -1761,7 +1888,7 @@ function showDeleteConfirmation(itemId, itemType) {
             break;
             
         case 'slide':
-            const slide = heroSlides.find(s => s.id == itemId);
+            const slide = heroSlides.find(s => s.id == itemId || s.firebaseKey == itemId);
             if (slide) {
                 itemName = slide.title;
                 message = `¿Está seguro de que desea eliminar el slide "${itemName}"?`;
@@ -1783,7 +1910,7 @@ function showDeleteConfirmation(itemId, itemType) {
 
 // Ejecutar eliminación
 async function executeDelete() {
-    const itemId = parseInt(document.getElementById('confirm-item-id').value);
+    const itemId = document.getElementById('confirm-item-id').value;
     const itemType = document.getElementById('confirm-item-type').value;
     
     if (!itemId || !itemType) {
@@ -1796,13 +1923,13 @@ async function executeDelete() {
             case 'category':
                 await deleteCategoryFromFirebase(itemId);
                 // Eliminar localmente
-                categories = categories.filter(c => c.id !== itemId);
+                categories = categories.filter(c => c.id !== itemId && c.firebaseKey !== itemId);
                 // Actualizar productos que tenían esta categoría
                 products.forEach(product => {
-                    if (product.categoryId == itemId) {
+                    if (product.category === categories.find(c => c.id === itemId)?.name) {
                         product.category = "Sin categoría";
                         // Actualizar en Firebase también
-                        db.saveProduct(product.id, product);
+                        saveProductToFirebase(product);
                     }
                 });
                 renderCategoriesTable();
@@ -1813,7 +1940,7 @@ async function executeDelete() {
             case 'product':
                 await deleteProductFromFirebase(itemId);
                 // Eliminar localmente
-                products = products.filter(p => p.id !== itemId);
+                products = products.filter(p => p.id !== itemId && p.firebaseKey !== itemId);
                 renderProductsTable();
                 showNotification('Producto eliminado exitosamente de Firebase');
                 break;
@@ -1821,7 +1948,7 @@ async function executeDelete() {
             case 'promotion':
                 await deletePromotionFromFirebase(itemId);
                 // Eliminar localmente
-                promotions = promotions.filter(p => p.id !== itemId);
+                promotions = promotions.filter(p => p.id !== itemId && p.firebaseKey !== itemId);
                 renderPromotions();
                 showNotification('Promoción eliminada exitosamente de Firebase');
                 break;
@@ -1829,7 +1956,7 @@ async function executeDelete() {
             case 'slide':
                 await deleteSlideFromFirebase(itemId);
                 // Eliminar localmente
-                heroSlides = heroSlides.filter(s => s.id !== itemId);
+                heroSlides = heroSlides.filter(s => s.id !== itemId && s.firebaseKey !== itemId);
                 renderSlides();
                 showNotification('Slide eliminado exitosamente de Firebase');
                 break;

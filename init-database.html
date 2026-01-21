@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Inicializar Base de Datos</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+</head>
+<body>
+    <h1>Inicializando Base de Datos Coquette Sport</h1>
+    <button onclick="initializeDatabase()">Inicializar Base de Datos</button>
+    <div id="status"></div>
+    
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAP44JZQ8z6XQBxGLRGSvfoJ00ChZIzqT8",
+            authDomain: "coquette-sport.firebaseapp.com",
+            databaseURL: "https://coquette-sport-default-rtdb.firebaseio.com",
+            projectId: "coquette-sport",
+            storageBucket: "coquette-sport.firebasestorage.app",
+            messagingSenderId: "433999067952",
+            appId: "1:433999067952:web:042000b97feff3e339e6f5"
+        };
+        
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
+        // Datos iniciales
+        const initialData = {
+            tienda: {
+                logo: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='80' viewBox='0 0 150 80'%3E%3Crect width='150' height='80' fill='%23C5A451'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial, sans-serif' font-size='14' font-weight='bold' fill='%23000' text-anchor='middle' dy='.3em'%3ECOQUETTE SPORT%3C/text%3E%3C/svg%3E",
+                whatsapp: "+1234567890",
+                location: "Av. Principal 123, Ciudad",
+                description: "Tienda de ropa deportiva de alta calidad.",
+                about: "Somos una tienda especializada en ropa deportiva de alta calidad, comprometidos con tu rendimiento y comodidad. Ofrecemos productos diseñados para atletas profesionales y entusiastas del fitness."
+            },
+            categorias: {
+                cat1: { id: "cat1", name: "Ropa Deportiva", image: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" },
+                cat2: { id: "cat2", name: "Zapatillas", image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" },
+                cat3: { id: "cat3", name: "Accesorios", image: "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" }
+            },
+            productos: {
+                prod1: {
+                    id: "prod1",
+                    name: "Camiseta Deportiva Elite",
+                    category: "Ropa Deportiva",
+                    price: 29.99,
+                    originalPrice: 39.99,
+                    description: "Camiseta de alta calidad para entrenamientos intensos. Material transpirable y ligero.",
+                    images: [
+                        "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+                        "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+                    ]
+                },
+                prod2: {
+                    id: "prod2",
+                    name: "Zapatillas Running Pro",
+                    category: "Zapatillas",
+                    price: 89.99,
+                    originalPrice: 99.99,
+                    description: "Zapatillas diseñadas para corredores de alto rendimiento. Amortiguación superior y máxima comodidad.",
+                    images: [
+                        "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+                        "https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+                    ]
+                }
+            },
+            slides: {
+                slide1: {
+                    id: "slide1",
+                    title: "Ropa Deportiva de Alta Calidad",
+                    description: "Equípate con lo mejor para tus entrenamientos",
+                    image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
+                },
+                slide2: {
+                    id: "slide2",
+                    title: "Nueva Colección Verano 2023",
+                    description: "Descubre las últimas tendencias en ropa deportiva",
+                    image: "https://images.unsplash.com/photo-1578763363227-a6c00da1c8a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
+                }
+            }
+        };
+        
+        async function initializeDatabase() {
+            const status = document.getElementById('status');
+            status.innerHTML = "Inicializando base de datos...";
+            
+            try {
+                // Guardar todos los datos
+                await database.ref().set(initialData);
+                status.innerHTML = "✅ Base de datos inicializada correctamente!";
+                status.style.color = "green";
+                
+                console.log("Datos inicializados:", initialData);
+            } catch (error) {
+                status.innerHTML = "❌ Error: " + error.message;
+                status.style.color = "red";
+                console.error("Error:", error);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -5,6 +5,7 @@
 const firebaseConfig = {
   apiKey: "AIzaSyAP44JZQ8z6XQBxGLRGSvfoJ00ChZIzqT8",
   authDomain: "coquette-sport.firebaseapp.com",
+  databaseURL: "https://coquette-sport-default-rtdb.firebaseio.com", // ¡AGREGA ESTA LÍNEA!
   projectId: "coquette-sport",
   storageBucket: "coquette-sport.firebasestorage.app",
   messagingSenderId: "433999067952",
@@ -19,33 +20,33 @@ const db = firebase.database();
 const storage = firebase.storage();
 const storageRef = storage.ref();
 
-// Exportar referencias
+// Exportar referencias CORREGIDAS para coincidir con tu estructura
 const databaseRefs = {
-  // Referencias principales
-  store: db.ref('store'),
-  categories: db.ref('categories'),
-  products: db.ref('products'),
-  promotions: db.ref('promotions'),
+  // Referencias principales (ajustadas a tu estructura)
+  store: db.ref('tienda'),  // Cambiado de 'store' a 'tienda'
+  categories: db.ref('categorias'),
+  products: db.ref('productos'),
+  promotions: db.ref('promociones'),  // Cambiado de 'promotions' a 'promociones'
   slides: db.ref('slides'),
   
   // Métodos de ayuda
-  getStoreData: () => db.ref('store').once('value'),
-  getCategories: () => db.ref('categories').once('value'),
-  getProducts: () => db.ref('products').once('value'),
-  getPromotions: () => db.ref('promotions').once('value'),
+  getStoreData: () => db.ref('tienda').once('value'),  // Cambiado
+  getCategories: () => db.ref('categorias').once('value'),
+  getProducts: () => db.ref('productos').once('value'),
+  getPromotions: () => db.ref('promociones').once('value'),  // Cambiado
   getSlides: () => db.ref('slides').once('value'),
   
   // Guardar datos
-  saveStoreData: (data) => db.ref('store').set(data),
-  saveCategory: (id, data) => db.ref('categories/' + id).set(data),
-  saveProduct: (id, data) => db.ref('products/' + id).set(data),
-  savePromotion: (id, data) => db.ref('promotions/' + id).set(data),
+  saveStoreData: (data) => db.ref('tienda').set(data),  // Cambiado
+  saveCategory: (id, data) => db.ref('categorias/' + id).set(data),
+  saveProduct: (id, data) => db.ref('productos/' + id).set(data),
+  savePromotion: (id, data) => db.ref('promociones/' + id).set(data),  // Cambiado
   saveSlide: (id, data) => db.ref('slides/' + id).set(data),
   
   // Eliminar datos
-  deleteCategory: (id) => db.ref('categories/' + id).remove(),
-  deleteProduct: (id) => db.ref('products/' + id).remove(),
-  deletePromotion: (id) => db.ref('promotions/' + id).remove(),
+  deleteCategory: (id) => db.ref('categorias/' + id).remove(),
+  deleteProduct: (id) => db.ref('productos/' + id).remove(),
+  deletePromotion: (id) => db.ref('promociones/' + id).remove(),  // Cambiado
   deleteSlide: (id) => db.ref('slides/' + id).remove()
 };
 
@@ -85,10 +86,10 @@ const storageFunctions = {
   },
   
   // Referencias específicas
-  productsRef: storageRef.child('products'),
-  categoriesRef: storageRef.child('categories'),
+  productsRef: storageRef.child('productos'),
+  categoriesRef: storageRef.child('categorias'),
   slidesRef: storageRef.child('slides'),
-  storeRef: storageRef.child('store')
+  storeRef: storageRef.child('tienda')
 };
 
 // Exportar todo
