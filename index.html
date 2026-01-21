@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=1.0, user-scalable=yes">
     <title>Coquette Sport - Tienda Deportiva</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer">
@@ -100,6 +100,169 @@
         .firebase-loading i {
             color: #C5A451;
             margin-right: 10px;
+        }
+        
+        /* ==========================================
+           CORRECCIONES PARA MÓVILES - EVITAR COLGADOS
+           ========================================== */
+
+        /* Mejorar respuesta táctil en móviles */
+        button, 
+        a, 
+        input, 
+        select, 
+        textarea {
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Aumentar área de toque en móviles */
+        .menu-toggle,
+        .cart-btn,
+        .close-sidebar,
+        .close-cart,
+        .close-product-modal,
+        .filter-btn,
+        .view-product,
+        .add-to-cart,
+        .add-to-cart-btn,
+        .checkout-btn {
+            min-height: 44px;
+            min-width: 44px;
+        }
+
+        /* Prevenir zoom en inputs en iOS */
+        input, select, textarea {
+            font-size: 16px !important;
+        }
+
+        /* Mejorar scroll en móviles */
+        .cart-items,
+        .sidebar-content {
+            -webkit-overflow-scrolling: touch;
+            overflow-scrolling: touch;
+        }
+
+        /* Prevenir scroll cuando hay modales abiertos */
+        body.modal-open {
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Corregir problemas de z-index en móviles */
+        .menu-toggle {
+            z-index: 1002 !important;
+        }
+
+        .cart-btn {
+            z-index: 1002 !important;
+        }
+
+        /* Prevenir selección de texto accidental en móviles */
+        .category-card,
+        .product-card,
+        .filter-btn {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        /* Prevenir ghost clicks en iOS */
+        * {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        input, textarea {
+            -webkit-user-select: auto !important;
+            -khtml-user-select: auto !important;
+            -moz-user-select: auto !important;
+            -ms-user-select: auto !important;
+            user-select: auto !important;
+        }
+
+        /* Para iOS específicamente */
+        @supports (-webkit-touch-callout: none) {
+            .menu-toggle, 
+            .cart-btn, 
+            button, 
+            a {
+                cursor: pointer;
+            }
+            
+            input, textarea {
+                font-size: 16px !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            /* Mejorar animaciones para móviles */
+            .sidebar,
+            .cart-sidebar {
+                transition: transform 0.3s ease;
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .cart-sidebar {
+                transform: translateX(100%);
+            }
+            
+            .cart-sidebar.open {
+                transform: translateX(0);
+            }
+            
+            /* Deshabilitar algunas animaciones pesadas en móviles */
+            .category-card:hover,
+            .product-card:hover {
+                transform: none;
+            }
+            
+            /* Mejorar velocidad de carga de imágenes */
+            img {
+                content-visibility: auto;
+            }
+        }
+
+        /* Mejorar visibilidad de botones en móviles */
+        @media (max-width: 576px) {
+            .hero-btn,
+            .checkout-btn,
+            .add-to-cart-btn {
+                padding: 16px 20px;
+                font-size: 16px;
+                min-height: 50px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .filter-btn {
+                padding: 10px 20px;
+                margin: 5px;
+            }
+            
+            /* Corregir problemas de overflow en móviles */
+            .product-modal-content {
+                width: 95%;
+                max-height: 85vh;
+                margin: 10px;
+            }
+            
+            .product-modal-body {
+                padding: 20px;
+                gap: 20px;
+            }
         }
     </style>
 </head>
@@ -347,7 +510,45 @@
     <!-- Configuración de Firebase -->
     <script src="js/firebase-config.js"></script>
 
-    <!-- Script principal con Firebase -->
+    <!-- Script principal con Firebase (Versión corregida para móviles) -->
     <script src="js/script-firebase.js"></script>
+
+    <script>
+        // Código adicional para prevenir problemas en móviles
+        document.addEventListener('DOMContentLoaded', function() {
+            // Prevenir zoom en iOS al hacer doble toque
+            let lastTouchEnd = 0;
+            document.addEventListener('touchend', function(event) {
+                const now = (new Date()).getTime();
+                if (now - lastTouchEnd <= 300) {
+                    event.preventDefault();
+                }
+                lastTouchEnd = now;
+            }, { passive: false });
+            
+            // Prevenir scroll cuando hay modales abiertos
+            document.addEventListener('touchmove', function(event) {
+                if (document.body.classList.contains('modal-open') || 
+                    document.getElementById('sidebar').classList.contains('open') || 
+                    document.getElementById('cart-sidebar').classList.contains('open')) {
+                    event.preventDefault();
+                }
+            }, { passive: false });
+            
+            // Mejorar clics en móviles
+            document.addEventListener('touchstart', function(e) {
+                const interactiveElements = ['BUTTON', 'A', 'INPUT', 'SELECT', 'TEXTAREA'];
+                if (interactiveElements.includes(e.target.tagName)) {
+                    e.target.classList.add('touch-active');
+                }
+            }, { passive: true });
+            
+            document.addEventListener('touchend', function(e) {
+                document.querySelectorAll('.touch-active').forEach(el => {
+                    el.classList.remove('touch-active');
+                });
+            }, { passive: true });
+        });
+    </script>
 </body>
 </html>

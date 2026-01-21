@@ -1894,3 +1894,153 @@ textarea:focus {
     outline: 3px solid rgba(197, 164, 81, 0.5);
     outline-offset: 2px;
 }
+/* ==========================================
+   CORRECCIONES PARA MÓVILES - EVITAR COLGADOS
+   ========================================== */
+
+/* Mejorar respuesta táctil en móviles */
+button, 
+a, 
+input, 
+select, 
+textarea {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Aumentar área de toque en móviles */
+.menu-toggle,
+.cart-btn,
+.close-sidebar,
+.close-cart,
+.close-product-modal,
+.filter-btn,
+.view-product,
+.add-to-cart,
+.add-to-cart-btn,
+.checkout-btn {
+    min-height: 44px;
+    min-width: 44px;
+}
+
+/* Prevenir zoom en inputs en iOS */
+input, select, textarea {
+    font-size: 16px !important;
+}
+
+/* Mejorar scroll en móviles */
+.cart-items,
+.sidebar-content {
+    -webkit-overflow-scrolling: touch;
+    overflow-scrolling: touch;
+}
+
+/* Prevenir scroll cuando hay modales abiertos */
+body.modal-open {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+}
+
+/* Mejorar animaciones para móviles */
+@media (max-width: 768px) {
+    .sidebar,
+    .cart-sidebar {
+        transition: transform 0.3s ease;
+        transform: translateX(-100%);
+    }
+    
+    .sidebar.open {
+        transform: translateX(0);
+    }
+    
+    .cart-sidebar {
+        transform: translateX(100%);
+    }
+    
+    .cart-sidebar.open {
+        transform: translateX(0);
+    }
+    
+    /* Deshabilitar algunas animaciones pesadas en móviles */
+    .category-card:hover,
+    .product-card:hover {
+        transform: none;
+    }
+    
+    /* Mejorar velocidad de carga de imágenes */
+    img {
+        content-visibility: auto;
+    }
+}
+
+/* Corregir problemas de z-index en móviles */
+.menu-toggle {
+    z-index: 1002 !important;
+}
+
+.cart-btn {
+    z-index: 1002 !important;
+}
+
+/* Prevenir selección de texto accidental en móviles */
+.category-card,
+.product-card,
+.filter-btn {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+/* Mejorar visibilidad de botones en móviles */
+@media (max-width: 576px) {
+    .hero-btn,
+    .checkout-btn,
+    .add-to-cart-btn {
+        padding: 16px 20px;
+        font-size: 16px;
+        min-height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .filter-btn {
+        padding: 10px 20px;
+        margin: 5px;
+    }
+}
+
+/* Corregir problemas de overflow en móviles */
+@media (max-width: 768px) {
+    .product-modal-content {
+        width: 95%;
+        max-height: 85vh;
+        margin: 10px;
+    }
+    
+    .product-modal-body {
+        padding: 20px;
+        gap: 20px;
+    }
+}
+
+/* Prevenir ghost clicks en iOS */
+* {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+input, textarea {
+    -webkit-user-select: auto !important;
+    -khtml-user-select: auto !important;
+    -moz-user-select: auto !important;
+    -ms-user-select: auto !important;
+    user-select: auto !important;
+}

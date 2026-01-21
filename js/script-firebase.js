@@ -1,4 +1,4 @@
-// script-firebase.js - CORREGIDO PARA MÓVILES
+// script-firebase.js - OPTIMIZADO PARA MÓVILES
 // Tienda principal con Firebase Realtime Database
 
 // Datos iniciales
@@ -21,6 +21,11 @@ let cart = [];
 let sidebar, overlay, menuToggle, closeSidebar, cartSidebar, cartBtn, closeCart;
 let cartItems, cartTotal, cartCount, checkoutBtn, productModal, closeProductModal;
 let searchInput, searchButton;
+
+// Variables para control de eventos táctiles
+let touchStartX = 0;
+let touchStartY = 0;
+let lastTap = 0;
 
 // Inicializar la aplicación
 document.addEventListener('DOMContentLoaded', async function() {
@@ -69,6 +74,12 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // Verificar conexión a Firebase
     checkFirebaseConnection();
+    
+    // Limpiar placeholders de carga
+    setTimeout(() => {
+        const loadingElements = document.querySelectorAll('.firebase-loading, .loading-placeholder');
+        loadingElements.forEach(el => el.style.display = 'none');
+    }, 1000);
 });
 
 // Inicializar Firebase con mejor manejo de errores
@@ -578,6 +589,11 @@ function renderHeroSlides() {
 function openProductModal(productId) {
     console.log("Abriendo modal para producto ID:", productId);
     
+    // Cerrar cualquier sidebar abierto primero
+    if (sidebar) sidebar.classList.remove('open');
+    if (cartSidebar) cartSidebar.classList.remove('open');
+    if (overlay) overlay.classList.remove('active');
+    
     // Usar comparación flexible para IDs
     const product = products.find(p => p.id == productId);
     if (!product) {
@@ -656,6 +672,9 @@ function openProductModal(productId) {
         productModal.style.display = 'flex';
         document.body.style.overflow = 'hidden'; // Prevenir scroll del body
         console.log("Modal mostrado");
+        
+        // En móviles, agregar clase para prevenir scroll
+        document.body.classList.add('modal-open');
     }
 }
 
@@ -895,6 +914,12 @@ function initEvents() {
             if (overlay) overlay.classList.add('active');
             document.body.style.overflow = 'hidden'; // Prevenir scroll
         });
+        
+        // Para móviles, prevenir comportamiento por defecto en touch
+        menuToggle.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            this.click();
+        }, { passive: false });
     }
     
     if (closeSidebar) {
@@ -910,12 +935,16 @@ function initEvents() {
     if (overlay) {
         overlay.addEventListener('click', function(e) {
             console.log("Clic en overlay, cerrando todo");
-            if (sidebar) sidebar.classList.remove('open');
-            if (overlay) overlay.classList.remove('active');
-            if (cartSidebar) cartSidebar.classList.remove('open');
-            if (productModal) productModal.style.display = 'none';
-            document.body.style.overflow = ''; // Restaurar scroll
+            closeAllModals();
         });
+        
+        // Para móviles, prevenir comportamiento por defecto
+        overlay.addEventListener('touchstart', function(e) {
+            if (sidebar.classList.contains('open') || cartSidebar.classList.contains('open')) {
+                e.preventDefault();
+                this.click();
+            }
+        }, { passive: false });
     }
     
     // Carrito
@@ -926,6 +955,12 @@ function initEvents() {
             if (cartSidebar) cartSidebar.classList.add('open');
             document.body.style.overflow = 'hidden'; // Prevenir scroll
         });
+        
+        // Para móviles
+        cartBtn.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            this.click();
+        }, { passive: false });
     }
     
     if (closeCart) {
@@ -942,6 +977,12 @@ function initEvents() {
             e.stopPropagation();
             completeOrder();
         });
+        
+        // Para móviles
+        checkoutBtn.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            this.click();
+        }, { passive: false });
     }
     
     // Modal de producto
@@ -949,8 +990,7 @@ function initEvents() {
         closeProductModal.addEventListener('click', function(e) {
             e.stopPropagation();
             console.log("Cerrando modal de producto");
-            if (productModal) productModal.style.display = 'none';
-            document.body.style.overflow = ''; // Restaurar scroll
+            closeProductModalFunc();
         });
     }
     
@@ -959,8 +999,7 @@ function initEvents() {
         productModal.addEventListener('click', function(e) {
             if (e.target === productModal) {
                 console.log("Clic fuera del modal, cerrando");
-                productModal.style.display = 'none';
-                document.body.style.overflow = ''; // Restaurar scroll
+                closeProductModalFunc();
             }
         });
     }
@@ -971,6 +1010,12 @@ function initEvents() {
             e.stopPropagation();
             performSearch();
         });
+        
+        // Para móviles
+        searchButton.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            this.click();
+        }, { passive: false });
     }
     
     if (searchInput) {
@@ -994,10 +1039,7 @@ function initEvents() {
             addToCart(productId, quantity);
             
             // Cerrar modal
-            if (productModal) {
-                productModal.style.display = 'none';
-                document.body.style.overflow = ''; // Restaurar scroll
-            }
+            closeProductModalFunc();
             
             // Actualizar botón en la lista de productos
             const productButton = document.querySelector(`.add-to-cart[data-id="${productId}"]`);
@@ -1006,6 +1048,12 @@ function initEvents() {
                 productButton.disabled = true;
             }
         });
+        
+        // Para móviles
+        modalAddToCartBtn.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            this.click();
+        }, { passive: false });
     }
     
     // Botones de cantidad en el modal de producto
@@ -1020,6 +1068,12 @@ function initEvents() {
                 quantityInput.value = parseInt(quantityInput.value) - 1;
             }
         });
+        
+        // Para móviles
+        minusBtn.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            this.click();
+        }, { passive: false });
     }
     
     if (plusBtn) {
@@ -1030,23 +1084,94 @@ function initEvents() {
                 quantityInput.value = parseInt(quantityInput.value) + 1;
             }
         });
+        
+        // Para móviles
+        plusBtn.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            this.click();
+        }, { passive: false });
     }
     
     // Configurar delegación de eventos PARA ELEMENTOS DINÁMICOS
     setupEventDelegation();
     
+    // Agregar eventos táctiles globales para prevenir comportamientos no deseados
+    document.addEventListener('touchstart', handleTouchStart, { passive: true });
+    document.addEventListener('touchend', handleTouchEnd, { passive: true });
+    document.addEventListener('touchmove', handleTouchMove, { passive: true });
+    
     console.log("Eventos inicializados");
+}
+
+// Función para cerrar todos los modales
+function closeAllModals() {
+    if (sidebar) sidebar.classList.remove('open');
+    if (overlay) overlay.classList.remove('active');
+    if (cartSidebar) cartSidebar.classList.remove('open');
+    if (productModal) productModal.style.display = 'none';
+    document.body.style.overflow = ''; // Restaurar scroll
+    document.body.classList.remove('modal-open');
+}
+
+// Función para cerrar modal de producto
+function closeProductModalFunc() {
+    if (productModal) productModal.style.display = 'none';
+    document.body.style.overflow = ''; // Restaurar scroll
+    document.body.classList.remove('modal-open');
+}
+
+// Manejar eventos táctiles
+function handleTouchStart(e) {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+    
+    // Detectar doble toque para prevenir zoom
+    const currentTime = new Date().getTime();
+    const tapLength = currentTime - lastTap;
+    
+    if (tapLength < 300 && tapLength > 0) {
+        e.preventDefault();
+    }
+    
+    lastTap = currentTime;
+}
+
+function handleTouchEnd(e) {
+    // Liberar recursos si es necesario
+}
+
+function handleTouchMove(e) {
+    // Prevenir scroll cuando hay modales abiertos
+    if (document.body.classList.contains('modal-open') || 
+        sidebar.classList.contains('open') || 
+        cartSidebar.classList.contains('open')) {
+        e.preventDefault();
+    }
 }
 
 // Configurar delegación de eventos para elementos dinámicos
 function setupEventDelegation() {
     console.log("Configurando delegación de eventos...");
     
-    // Delegación de eventos para elementos dinámicos
-    document.addEventListener('click', function(e) {
-        // Para móviles, también manejar eventos táctiles
+    // Función manejadora para eventos
+    function handleEvent(e) {
+        // Para móviles, prevenir comportamiento por defecto en elementos interactivos
         if (e.type === 'touchstart') {
-            e.preventDefault(); // Prevenir comportamiento por defecto en móviles
+            const tagName = e.target.tagName.toLowerCase();
+            const isInteractive = ['button', 'a', 'input', 'select', 'textarea'].includes(tagName);
+            
+            if (isInteractive) {
+                e.preventDefault();
+            }
+            
+            // Simular clic después de un breve retraso para móviles
+            if (e.target.closest('button, a')) {
+                setTimeout(() => {
+                    if (!e.defaultPrevented) {
+                        e.target.click();
+                    }
+                }, 50);
+            }
         }
         
         // Categorías
@@ -1069,9 +1194,7 @@ function setupEventDelegation() {
             }
             
             // Cerrar sidebar si está abierto
-            if (sidebar) sidebar.classList.remove('open');
-            if (overlay) overlay.classList.remove('active');
-            document.body.style.overflow = ''; // Restaurar scroll
+            closeAllModals();
         }
         
         // Enlaces de categorías en sidebar
@@ -1094,9 +1217,7 @@ function setupEventDelegation() {
             }
             
             // Cerrar sidebar
-            if (sidebar) sidebar.classList.remove('open');
-            if (overlay) overlay.classList.remove('active');
-            document.body.style.overflow = ''; // Restaurar scroll
+            closeAllModals();
         }
         
         // Botones de filtro
@@ -1128,7 +1249,7 @@ function setupEventDelegation() {
         
         // Productos - Agregar al carrito (botones en la lista de productos)
         const addToCartBtn = e.target.closest('.add-to-cart');
-        if (addToCartBtn) {
+        if (addToCartBtn && !addToCartBtn.disabled) {
             e.preventDefault();
             e.stopPropagation();
             const productId = addToCartBtn.getAttribute('data-id');
@@ -1175,13 +1296,11 @@ function setupEventDelegation() {
                 targetElement.scrollIntoView({ behavior: 'smooth' });
             }
         }
-    });
+    }
     
-    // Agregar eventos táctiles para móviles
-    document.addEventListener('touchstart', function(e) {
-        // Delegación para eventos táctiles
-        setupEventDelegation();
-    }, { passive: true });
+    // Agregar event listeners para click y touchstart
+    document.addEventListener('click', handleEvent);
+    document.addEventListener('touchstart', handleEvent, { passive: false });
 }
 
 // Realizar búsqueda
