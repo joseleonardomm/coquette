@@ -23,16 +23,14 @@ body {
     width: 100%;
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0 15px;
+    padding: 0 20px;
 }
 
 /* ==========================================
    BOTÓN HAMBURGUESA MEJORADO
    ========================================== */
 .menu-toggle {
-    position: fixed;
-    top: 20px;
-    left: 20px;
+    position: relative;
     width: 50px;
     height: 50px;
     background: #000;
@@ -54,40 +52,83 @@ body {
     transform: scale(1.05);
 }
 
-.menu-toggle::before,
-.menu-toggle::after {
-    content: '';
-    width: 24px;
-    height: 2px;
-    background: #C5A451;
-    border-radius: 2px;
+.menu-toggle i {
+    color: #C5A451;
+    font-size: 20px;
     transition: all 0.3s ease;
 }
 
-.menu-toggle:hover::before,
-.menu-toggle:hover::after {
-    background: #000;
+.menu-toggle:hover i {
+    color: #000;
 }
 
-.menu-toggle::before {
-    transform: translateY(-3px);
+/* ==========================================
+   NUEVOS ESTILOS PARA LOGO Y ALINEACIÓN
+   ========================================== */
+
+/* Contenedor izquierdo del header */
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex: 1;
 }
 
-.menu-toggle::after {
-    transform: translateY(3px);
+/* Logo con texto al lado */
+.logo-with-text {
+    display: flex;
+    align-items: center;
+    gap: 15px;
 }
 
-/* Línea del medio con pseudo-elemento adicional */
-.menu-toggle span {
-    width: 24px;
-    height: 2px;
-    background: #C5A451;
-    border-radius: 2px;
-    transition: all 0.3s ease;
+.logo-with-text img {
+    max-height: 55px;
+    width: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    border: 2px solid #C5A451;
+    padding: 5px;
+    background: #fff;
 }
 
-.menu-toggle:hover span {
-    background: #000;
+.brand-name {
+    font-size: 22px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    white-space: nowrap;
+}
+
+/* Logo en sidebar */
+.logo-with-text-sidebar {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    justify-content: center;
+}
+
+.logo-with-text-sidebar img {
+    max-width: 60px;
+    height: auto;
+    border-radius: 6px;
+    border: 2px solid #C5A451;
+    padding: 3px;
+    background: #fff;
+}
+
+.brand-name-sidebar {
+    font-size: 18px;
+    font-weight: 700;
+    color: #C5A451;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+/* Ajustar contenedor del logo en sidebar */
+.logo-container {
+    padding: 15px;
 }
 
 /* ==========================================
@@ -262,7 +303,7 @@ body {
 }
 
 /* ==========================================
-   HEADER PRINCIPAL
+   HEADER PRINCIPAL MEJORADO
    ========================================== */
 .main-header {
     background: linear-gradient(180deg, #000000 0%, #1a1a1a 100%);
@@ -278,27 +319,12 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0 30px;
+    gap: 20px;
+    padding: 0 20px;
 }
 
-.logo {
-    flex: 1;
-    text-align: center;
-    margin-left: 60px; /* Compensar el espacio del botón hamburguesa */
-}
-
-.logo img {
-    max-height: 65px;
-    width: auto;
-    transition: transform 0.3s ease;
-}
-
-.logo img:hover {
-    transform: scale(1.05);
-}
-
+/* Buscador más compacto */
 .search-container {
-    display: flex;
     flex-grow: 1;
     max-width: 400px;
     margin: 0 20px;
@@ -717,13 +743,13 @@ body {
    CATEGORÍAS
    ========================================== */
 .categories-section {
-    padding: 80px 0;
+    padding: 60px 0;
     background: linear-gradient(180deg, #f9f9f9 0%, #fff 100%);
 }
 
 .section-title {
     text-align: center;
-    margin-bottom: 60px;
+    margin-bottom: 50px;
     font-size: 36px;
     color: #000;
     position: relative;
@@ -744,29 +770,31 @@ body {
 .categories-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 30px;
-    margin-bottom: 80px;
+    gap: 25px;
+    margin-bottom: 60px;
 }
 
 .category-card {
     background: #fff;
-    border-radius: 15px;
+    border-radius: 12px;
     overflow: hidden;
-    transition: all 0.4s ease;
+    transition: all 0.3s ease;
     cursor: pointer;
     border: 2px solid transparent;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
     position: relative;
 }
 
 .category-card:hover {
-    transform: translateY(-10px);
+    transform: translateY(-5px);
     border-color: #C5A451;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
+/* Imágenes de categorías cuadradas */
 .category-image {
-    height: 200px;
+    height: 220px;
+    width: 100%;
     overflow: hidden;
     position: relative;
 }
@@ -785,7 +813,7 @@ body {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.6s ease;
+    transition: transform 0.5s ease;
 }
 
 .category-card:hover .category-image img {
@@ -807,7 +835,7 @@ body {
    PRODUCTOS
    ========================================== */
 .products-section {
-    padding: 80px 0;
+    padding: 60px 0;
     background: linear-gradient(180deg, #fff 0%, #f9f9f9 100%);
 }
 
@@ -816,7 +844,7 @@ body {
     justify-content: center;
     flex-wrap: wrap;
     gap: 15px;
-    margin-bottom: 50px;
+    margin-bottom: 40px;
 }
 
 .filter-btn {
@@ -843,26 +871,28 @@ body {
 .products-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 40px;
-    margin-bottom: 80px;
+    gap: 30px;
+    margin-bottom: 60px;
 }
 
 .product-card {
     background: #fff;
-    border-radius: 15px;
+    border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-    transition: all 0.4s ease;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
     position: relative;
 }
 
 .product-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
+/* Imágenes de productos cuadradas */
 .product-image {
     height: 280px;
+    width: 100%;
     overflow: hidden;
     position: relative;
 }
@@ -871,7 +901,7 @@ body {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.6s ease;
+    transition: transform 0.5s ease;
 }
 
 .product-card:hover .product-image img {
@@ -915,8 +945,9 @@ body {
 }
 
 .product-info {
-    padding: 25px;
+    padding: 20px;
     background: #fff;
+    text-align: center;
 }
 
 .product-category {
@@ -931,10 +962,10 @@ body {
 .product-title {
     font-size: 20px;
     font-weight: 700;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
     color: #000;
     line-height: 1.4;
-    min-height: 56px;
+    min-height: auto;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -944,8 +975,9 @@ body {
 .product-price {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 15px;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
 }
 
 .current-price {
@@ -995,8 +1027,8 @@ body {
    ========================================== */
 .about-section {
     background: linear-gradient(180deg, #f9f9f9 0%, #fff 100%);
-    padding: 80px 0;
-    margin-bottom: 80px;
+    padding: 60px 0;
+    margin-bottom: 60px;
 }
 
 .about-content {
@@ -1136,10 +1168,12 @@ body {
     gap: 20px;
 }
 
+/* Imágenes en el modal cuadradas */
 .main-image {
-    height: 450px;
+    height: 400px;
+    width: 100%;
     overflow: hidden;
-    border-radius: 15px;
+    border-radius: 12px;
     background: #f9f9f9;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
@@ -1161,10 +1195,11 @@ body {
     flex-wrap: wrap;
 }
 
+/* Miniaturas cuadradas en el modal */
 .thumbnail {
-    width: 90px;
-    height: 90px;
-    border-radius: 10px;
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
     overflow: hidden;
     cursor: pointer;
     border: 2px solid transparent;
@@ -1504,6 +1539,36 @@ body {
 }
 
 /* ==========================================
+   ANIMACIONES SUAVES
+   ========================================== */
+.category-card,
+.product-card {
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.category-card:nth-child(2) { animation-delay: 0.1s; }
+.category-card:nth-child(3) { animation-delay: 0.2s; }
+.category-card:nth-child(4) { animation-delay: 0.3s; }
+.category-card:nth-child(5) { animation-delay: 0.4s; }
+
+.product-card:nth-child(2) { animation-delay: 0.1s; }
+.product-card:nth-child(3) { animation-delay: 0.2s; }
+.product-card:nth-child(4) { animation-delay: 0.3s; }
+.product-card:nth-child(5) { animation-delay: 0.4s; }
+.product-card:nth-child(6) { animation-delay: 0.5s; }
+
+/* ==========================================
    RESPONSIVE
    ========================================== */
 @media (max-width: 1200px) {
@@ -1529,16 +1594,17 @@ body {
         height: 45px;
     }
     
+    .brand-name {
+        font-size: 18px;
+        letter-spacing: 1px;
+    }
+    
+    .logo-with-text img {
+        max-height: 45px;
+    }
+    
     .main-header .container {
         padding: 0 20px;
-    }
-    
-    .logo {
-        margin-left: 50px;
-    }
-    
-    .logo img {
-        max-height: 55px;
     }
     
     .cart-btn {
@@ -1578,20 +1644,46 @@ body {
         width: 350px;
         right: -350px;
     }
+    
+    .category-image {
+        height: 200px;
+    }
+    
+    .product-image {
+        height: 250px;
+    }
 }
 
 @media (max-width: 768px) {
     .menu-toggle {
-        top: 12px;
-        left: 12px;
+        position: relative;
+        top: 0;
+        left: 0;
         width: 40px;
         height: 40px;
     }
     
-    .menu-toggle::before,
-    .menu-toggle::after,
-    .menu-toggle span {
-        width: 20px;
+    .header-left {
+        gap: 10px;
+    }
+    
+    .logo-with-text {
+        gap: 10px;
+    }
+    
+    .brand-name {
+        font-size: 16px;
+        display: block;
+    }
+    
+    .logo-with-text-sidebar {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .brand-name-sidebar {
+        font-size: 16px;
+        text-align: center;
     }
     
     .main-header .container {
@@ -1599,22 +1691,10 @@ body {
         padding: 15px;
     }
     
-    .logo {
-        order: 2;
-        margin: 15px 0 0 0;
-        width: 100%;
-        text-align: center;
-        flex: 0 0 100%;
-    }
-    
-    .logo img {
-        max-height: 50px;
-    }
-    
     .search-container {
         order: 3;
-        max-width: 100%;
         margin: 15px 0 0 0;
+        max-width: 100%;
         flex: 0 0 100%;
     }
     
@@ -1688,12 +1768,33 @@ body {
         grid-template-columns: 1fr;
         gap: 40px;
     }
+    
+    .category-image {
+        height: 180px;
+    }
+    
+    .product-image {
+        height: 220px;
+    }
+    
+    .main-image {
+        height: 300px;
+    }
 }
 
 @media (max-width: 576px) {
     .menu-toggle {
-        top: 10px;
-        left: 10px;
+        top: 0;
+        left: 0;
+    }
+    
+    .brand-name {
+        font-size: 14px;
+        letter-spacing: 0.5px;
+    }
+    
+    .logo-with-text img {
+        max-height: 40px;
     }
     
     .hero-slider {
@@ -1724,12 +1825,12 @@ body {
     }
     
     .main-image {
-        height: 350px;
+        height: 250px;
     }
     
     .thumbnail {
-        width: 70px;
-        height: 70px;
+        width: 60px;
+        height: 60px;
     }
     
     .product-modal-details h2 {
@@ -1752,6 +1853,14 @@ body {
     .search-container button {
         padding: 0 15px;
         min-width: 50px;
+    }
+    
+    .category-image {
+        height: 150px;
+    }
+    
+    .product-image {
+        height: 180px;
     }
 }
 
@@ -1785,31 +1894,3 @@ textarea:focus {
     outline: 3px solid rgba(197, 164, 81, 0.5);
     outline-offset: 2px;
 }
-
-/* Animaciones adicionales */
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.category-card,
-.product-card {
-    animation: fadeInUp 0.6s ease forwards;
-}
-
-.category-card:nth-child(2) { animation-delay: 0.1s; }
-.category-card:nth-child(3) { animation-delay: 0.2s; }
-.category-card:nth-child(4) { animation-delay: 0.3s; }
-.category-card:nth-child(5) { animation-delay: 0.4s; }
-
-.product-card:nth-child(2) { animation-delay: 0.1s; }
-.product-card:nth-child(3) { animation-delay: 0.2s; }
-.product-card:nth-child(4) { animation-delay: 0.3s; }
-.product-card:nth-child(5) { animation-delay: 0.4s; }
-.product-card:nth-child(6) { animation-delay: 0.5s; }
