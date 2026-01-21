@@ -1,5 +1,5 @@
 // script-firebase.js
-// Tienda principal con Firebase
+// Tienda principal con Firebase Realtime Database
 
 // Datos iniciales
 let storeData = {
@@ -26,10 +26,18 @@ let searchInput, searchButton;
 document.addEventListener('DOMContentLoaded', async function() {
     console.log("DOM cargado, inicializando aplicación con Firebase...");
     
-    // Verificar si Firebase está cargado
-    if (typeof firebase === 'undefined') {
-        console.error("Firebase no está cargado. Asegúrate de incluir firebase-config.js");
+    // Inicializar Firebase
+    const firebaseInitialized = initializeFirebase();
+    
+    if (!firebaseInitialized) {
+        console.error("No se pudo inicializar Firebase. Cargando datos por defecto...");
         showNotification('Error: Firebase no está configurado', 'error');
+        loadDefaultData();
+        renderStoreData();
+        renderCategories();
+        renderProducts();
+        initEvents();
+        updateCart();
         return;
     }
     
@@ -59,6 +67,44 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     console.log("Aplicación con Firebase inicializada correctamente");
 });
+
+// Inicializar Firebase
+function initializeFirebase() {
+    try {
+        console.log("Inicializando Firebase...");
+        
+        // Verificar si Firebase está cargado
+        if (typeof firebase === 'undefined') {
+            console.error("Firebase SDK no está cargado");
+            return false;
+        }
+        
+        // Configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAP44JZQ8z6XQBxGLRGSvfoJ00ChZIzqT8",
+            authDomain: "coquette-sport.firebaseapp.com",
+            databaseURL: "https://coquette-sport-default-rtdb.firebaseio.com",
+            projectId: "coquette-sport",
+            storageBucket: "coquette-sport.firebasestorage.app",
+            messagingSenderId: "433999067952",
+            appId: "1:433999067952:web:042000b97feff3e339e6f5"
+        };
+        
+        // Inicializar Firebase solo si no está inicializado
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+            console.log("Firebase inicializado correctamente");
+        } else {
+            console.log("Firebase ya estaba inicializado");
+        }
+        
+        return true;
+        
+    } catch (error) {
+        console.error("Error inicializando Firebase:", error);
+        return false;
+    }
+}
 
 // Configurar acceso invisible al admin
 function setupAdminAccess() {
@@ -130,41 +176,57 @@ function initializeDOMElements() {
     });
 }
 
-// Cargar datos desde Firebase
+// Cargar datos desde Firebase Realtime Database
 async function loadDataFromFirebase() {
     try {
-        console.log("Cargando datos desde Firebase...");
+        console.log("Cargando datos desde Firebase Realtime Database...");
+        
+        const database = firebase.database();
+        
+        // Función helper para convertir objetos de Firebase a arrays
+        const firebaseObjectToArray = (obj) => {
+            if (!obj) return [];
+            return Object.keys(obj).map(key => ({
+                id: obj[key].id || key, // Usar id del objeto o la clave de Firebase
+                ...obj[key]
+            }));
+        };
         
         // Cargar datos de la tienda
-        const storeSnapshot = await db.getStoreData();
+        const storeSnapshot = await database.ref('tienda').once('value');
         if (storeSnapshot.exists()) {
-            storeData = storeSnapshot.val();
+            storeData = { ...storeData, ...storeSnapshot.val() };
             console.log("Datos de tienda cargados desde Firebase");
         }
         
         // Cargar categorías
-        const categoriesSnapshot = await db.getCategories();
-        if (categoriesSnapshot.exists()) {
-            const cats = categoriesSnapshot.val();
-            categories = cats ? Object.values(cats) : [];
-            console.log("Categorías cargadas desde Firebase:", categories.length);
-        }
+        const categoriesSnapshot = await database.ref('categorias').once('value');
+        const cats = categoriesSnapshot.val();
+        categories = firebaseObjectToArray(cats);
+        console.log("Categorías cargadas desde Firebase:", categories.length);
         
         // Cargar productos
-        const productsSnapshot = await db.getProducts();
-        if (productsSnapshot.exists()) {
-            const prods = productsSnapshot.val();
-            products = prods ? Object.values(prods) : [];
-            console.log("Productos cargados desde Firebase:", products.length);
-        }
+        const productsSnapshot = await database.ref('productos').once('value');
+        const prods = productsSnapshot.val();
+        const productsArray = firebaseObjectToArray(prods);
+        
+        // Procesar productos para asegurar tipos de datos correctos
+        products = productsArray.map(product => ({
+            ...product,
+            price: parseFloat(product.price) || 0,
+            originalPrice: product.originalPrice ? parseFloat(product.originalPrice) : null,
+            images: Array.isArray(product.images) ? product.images : [],
+            description: product.description || '',
+            category: product.category || ''
+        }));
+        
+        console.log("Productos cargados desde Firebase:", products.length);
         
         // Cargar slides
-        const slidesSnapshot = await db.getSlides();
-        if (slidesSnapshot.exists()) {
-            const sls = slidesSnapshot.val();
-            heroSlides = sls ? Object.values(sls) : [];
-            console.log("Slides cargados desde Firebase:", heroSlides.length);
-        }
+        const slidesSnapshot = await database.ref('slides').once('value');
+        const sls = slidesSnapshot.val();
+        heroSlides = firebaseObjectToArray(sls);
+        console.log("Slides cargados desde Firebase:", heroSlides.length);
         
         // Si no hay datos, cargar datos por defecto
         if (categories.length === 0 && products.length === 0) {
@@ -500,7 +562,7 @@ function renderHeroSlides() {
 function openProductModal(productId) {
     console.log("Abriendo modal para producto ID:", productId);
     
-    const product = products.find(p => p.id === productId);
+    const product = products.find(p => p.id == productId);
     if (!product) {
         console.error("Producto no encontrado:", productId);
         return;
@@ -571,7 +633,7 @@ function openProductModal(productId) {
 function addToCart(productId, quantity = 1) {
     console.log("Agregando al carrito producto ID:", productId, "cantidad:", quantity);
     
-    const product = products.find(p => p.id === productId);
+    const product = products.find(p => p.id == productId);
     if (!product) {
         console.error("Producto no encontrado:", productId);
         return;
@@ -725,13 +787,22 @@ function completeOrder() {
 }
 
 // Mostrar notificación
-function showNotification(message) {
+function showNotification(message, type) {
     console.log("Mostrando notificación:", message);
     
     // Crear elemento de notificación
     const notification = document.createElement('div');
     notification.className = 'notification';
     notification.textContent = message;
+    
+    // Agregar estilo según tipo
+    if (type === 'error') {
+        notification.style.background = 'linear-gradient(135deg, #ff4444 0%, #ff6666 100%)';
+    } else if (type === 'warning') {
+        notification.style.background = 'linear-gradient(135deg, #ff9800 0%, #ffb74d 100%)';
+    } else {
+        notification.style.background = 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)';
+    }
     
     // Agregar al DOM
     document.body.appendChild(notification);
@@ -1092,4 +1163,20 @@ function performSearch() {
     });
     
     console.log("Resultados de búsqueda:", filteredProducts.length);
+}
+
+// Función para verificar la conexión a Firebase
+function checkFirebaseConnection() {
+    try {
+        const database = firebase.database();
+        database.ref('.info/connected').on('value', function(snap) {
+            if (snap.val() === true) {
+                console.log("✅ Conectado a Firebase Realtime Database");
+            } else {
+                console.log("❌ Desconectado de Firebase Realtime Database");
+            }
+        });
+    } catch (error) {
+        console.error("Error verificando conexión a Firebase:", error);
+    }
 }
