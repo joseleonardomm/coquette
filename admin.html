@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - Coquette Sport</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Estilos adicionales para modales */
+        .admin-modal .modal-content {
+            max-width: 800px;
+        }
+        
+        .preview-container img {
+            max-width: 100%;
+            max-height: 200px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 5px;
+            background: #f9f9f9;
+        }
+        
+        #product-images-preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .image-preview-item {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s;
+        }
+        
+        .image-preview-item:hover {
+            border-color: #FFD700;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .image-preview-item img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            display: block;
+        }
+        
+        .remove-image {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255, 0, 0, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+        
+        .remove-image:hover {
+            background: #ff0000;
+            transform: scale(1.1);
+        }
+        
+        /* Mejoras para formularios en modales */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 0;
+                margin-bottom: 0;
+            }
+            
+            .form-row .form-group {
+                margin-bottom: 20px;
+            }
+        }
+        
+        /* Estilos para alertas */
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid;
+        }
+        
+        .alert-info {
+            background: #e3f2fd;
+            border-left-color: #2196f3;
+            color: #1565c0;
+        }
+        
+        .alert-warning {
+            background: #fff3e0;
+            border-left-color: #ff9800;
+            color: #e65100;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <header class="admin-header">
+            <div class="container">
+                <h1><i class="fas fa-cog"></i> Panel de Administración</h1>
+                <nav class="admin-nav">
+                    <button class="nav-btn active" data-section="store">Tienda</button>
+                    <button class="nav-btn" data-section="categories">Categorías</button>
+                    <button class="nav-btn" data-section="products">Productos</button>
+                    <button class="nav-btn" data-section="promotions">Promociones</button>
+                    <button class="nav-btn" data-section="slides">Slides</button>
+                    <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Volver a la tienda</a>
+                </nav>
+            </div>
+        </header>
+        
+        <main class="admin-main">
+            <div class="container">
+                <!-- Sección: Configuración de la tienda -->
+                <section class="admin-section active" id="store-section">
+                    <h2><i class="fas fa-store"></i> Configuración de la Tienda</h2>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Los cambios se guardan automáticamente cuando haces clic fuera de los campos.
+                    </div>
+                    
+                    <div class="admin-form">
+                        <div class="form-group">
+                            <label for="logo-upload">Logo de la tienda (JPG o PNG)</label>
+                            <div class="upload-container">
+                                <input type="file" id="logo-upload" accept=".jpg,.jpeg,.png,.gif,.svg" style="display: none;">
+                                <button id="logo-upload-btn" class="upload-btn"><i class="fas fa-upload"></i> Subir Imagen</button>
+                                <span class="upload-hint">Tamaño recomendado: 300x150px</span>
+                            </div>
+                            <div class="preview-container">
+                                <img id="logo-preview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='150' viewBox='0 0 300 150'%3E%3Crect width='300' height='150' fill='%23f0f0f0'/%3E%3Ctext x='150' y='75' font-family='Arial' font-size='16' text-anchor='middle' dominant-baseline='middle' fill='%23666'%3ELogo de la tienda%3C/text%3E%3C/svg%3E" alt="Vista previa del logo">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="whatsapp-number">Número de WhatsApp (con código de país)</label>
+                            <input type="text" id="whatsapp-number" placeholder="Ej: +51987654321">
+                            <small class="form-hint">Incluye el código de país. Ej: +51 para Perú, +1 para USA</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="store-location">Ubicación de la tienda</label>
+                            <input type="text" id="store-location" placeholder="Ej: Av. Principal 123, Miraflores, Lima">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="store-description">Descripción corta de la tienda</label>
+                            <textarea id="store-description" rows="3" placeholder="Descripción que aparecerá en la tienda (máximo 200 caracteres)"></textarea>
+                            <div class="char-count"><span id="desc-chars">0</span>/200 caracteres</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="store-about">Sobre la tienda (texto más largo)</label>
+                            <textarea id="store-about" rows="5" placeholder="Texto sobre la tienda para la sección 'Sobre nosotros'"></textarea>
+                            <div class="char-count"><span id="about-chars">0</span>/1000 caracteres</div>
+                        </div>
+                        
+                        <button id="save-store-btn" class="save-btn">
+                            <i class="fas fa-save"></i> Guardar Configuración
+                        </button>
+                    </div>
+                </section>
+                
+                <!-- Sección: Categorías -->
+                <section class="admin-section" id="categories-section">
+                    <h2><i class="fas fa-tags"></i> Gestión de Categorías</h2>
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> Si eliminas una categoría, los productos asociados se marcarán como "Sin categoría".
+                    </div>
+                    
+                    <div class="admin-actions">
+                        <button id="add-category-btn" class="add-btn">
+                            <i class="fas fa-plus"></i> Agregar Categoría
+                        </button>
+                        <div class="table-info">
+                            <span id="categories-count">0 categorías</span>
+                        </div>
+                    </div>
+                    
+                    <div class="admin-table-container">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Imagen</th>
+                                    <th>Productos</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="categories-table">
+                                <tr>
+                                    <td colspan="5" style="text-align: center; padding: 40px;">
+                                        <div class="loading-spinner">
+                                            <i class="fas fa-spinner fa-spin"></i>
+                                            <p>Cargando categorías...</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+                
+                <!-- Sección: Productos -->
+                <section class="admin-section" id="products-section">
+                    <h2><i class="fas fa-tshirt"></i> Gestión de Productos</h2>
+                    
+                    <div class="admin-actions">
+                        <button id="add-product-btn" class="add-btn">
+                            <i class="fas fa-plus"></i> Agregar Producto
+                        </button>
+                        <div class="table-info">
+                            <span id="products-count">0 productos</span>
+                        </div>
+                    </div>
+                    
+                    <div class="admin-table-container">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Categoría</th>
+                                    <th>Precio</th>
+                                    <th>Stock</th>
+                                    <th>Imágenes</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="products-table">
+                                <tr>
+                                    <td colspan="7" style="text-align: center; padding: 40px;">
+                                        <div class="loading-spinner">
+                                            <i class="fas fa-spinner fa-spin"></i>
+                                            <p>Cargando productos...</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+                
+                <!-- Sección: Promociones -->
+                <section class="admin-section" id="promotions-section">
+                    <h2><i class="fas fa-percentage"></i> Gestión de Promociones</h2>
+                    
+                    <div class="admin-actions">
+                        <button id="add-promotion-btn" class="add-btn">
+                            <i class="fas fa-plus"></i> Agregar Promoción
+                        </button>
+                        <div class="table-info">
+                            <span id="promotions-count">0 promociones</span>
+                        </div>
+                    </div>
+                    
+                    <div class="promotions-container">
+                        <div class="promotion-cards" id="promotion-cards">
+                            <div class="promotion-card" style="text-align: center; padding: 40px;">
+                                <div class="loading-spinner">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    <p>Cargando promociones...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Sección: Slides -->
+                <section class="admin-section" id="slides-section">
+                    <h2><i class="fas fa-images"></i> Gestión de Slides</h2>
+                    
+                    <div class="admin-actions">
+                        <button id="add-slide-btn" class="add-btn">
+                            <i class="fas fa-plus"></i> Agregar Slide
+                        </button>
+                        <div class="table-info">
+                            <span id="slides-count">0 slides</span>
+                        </div>
+                    </div>
+                    
+                    <div class="slides-container">
+                        <div class="slide-cards" id="slide-cards">
+                            <div class="slide-card" style="text-align: center; padding: 40px;">
+                                <div class="loading-spinner">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    <p>Cargando slides...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+        
+        <div class="admin-notification" id="admin-notification">
+            <i class="fas fa-check-circle"></i>
+            <span id="notification-text">Cambios guardados exitosamente</span>
+        </div>
+    </div>
+
+    <!-- Modal para categorías -->
+    <div class="admin-modal" id="category-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="category-modal-title"><i class="fas fa-tag"></i> Agregar Categoría</h3>
+                <button class="close-modal" id="close-category-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="category-name">Nombre de la categoría *</label>
+                    <input type="text" id="category-name" placeholder="Ej: Ropa Deportiva" maxlength="50">
+                    <div class="char-count"><span id="category-name-chars">0</span>/50 caracteres</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="category-image-upload">Imagen de la categoría (JPG, PNG o GIF) *</label>
+                    <div class="upload-container">
+                        <input type="file" id="category-image-upload" accept=".jpg,.jpeg,.png,.gif" style="display: none;">
+                        <button id="category-upload-btn" class="upload-btn"><i class="fas fa-upload"></i> Subir Imagen</button>
+                        <span class="upload-hint">Tamaño recomendado: 600x300px</span>
+                    </div>
+                    <div class="preview-container">
+                        <img id="category-image-preview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='150' viewBox='0 0 300 150'%3E%3Crect width='300' height='150' fill='%23f0f0f0'/%3E%3Ctext x='150' y='75' font-family='Arial' font-size='16' text-anchor='middle' dominant-baseline='middle' fill='%23666'%3EVista previa%3C/text%3E%3C/svg%3E" alt="Vista previa">
+                    </div>
+                </div>
+                
+                <input type="hidden" id="category-id" value="">
+                <div class="form-required-note">* Campos obligatorios</div>
+            </div>
+            <div class="modal-footer">
+                <button class="cancel-btn" id="cancel-category">Cancelar</button>
+                <button class="save-modal-btn" id="save-category">Guardar Categoría</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para productos -->
+    <div class="admin-modal" id="product-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="product-modal-title"><i class="fas fa-tshirt"></i> Agregar Producto</h3>
+                <button class="close-modal" id="close-product-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="product-name">Nombre del producto *</label>
+                        <input type="text" id="product-name" placeholder="Ej: Camiseta Deportiva Elite" maxlength="100">
+                        <div class="char-count"><span id="product-name-chars">0</span>/100 caracteres</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="product-category">Categoría *</label>
+                        <select id="product-category">
+                            <option value="">Seleccione una categoría</option>
+                            <!-- Las opciones se cargarán dinámicamente -->
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="product-price">Precio *</label>
+                        <div class="price-input">
+                            <span class="currency">$</span>
+                            <input type="number" id="product-price" min="0" step="0.01" placeholder="29.99">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="product-original-price">Precio original (opcional)</label>
+                        <div class="price-input">
+                            <span class="currency">$</span>
+                            <input type="number" id="product-original-price" min="0" step="0.01" placeholder="39.99">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="product-description">Descripción del producto *</label>
+                    <textarea id="product-description" rows="4" placeholder="Describe el producto..." maxlength="500"></textarea>
+                    <div class="char-count"><span id="product-desc-chars">0</span>/500 caracteres</div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Imágenes del producto (JPG o PNG, máximo 5) *</label>
+                    <div class="upload-container">
+                        <input type="file" id="product-images-upload" accept=".jpg,.jpeg,.png" multiple style="display: none;">
+                        <button id="product-images-upload-btn" class="upload-btn"><i class="fas fa-upload"></i> Subir Imágenes</button>
+                        <span class="upload-hint">Máximo 5 imágenes. Tamaño recomendado: 600x600px</span>
+                    </div>
+                    <div class="image-counter" id="image-counter">0/5 imágenes seleccionadas</div>
+                    <div class="preview-container" id="product-images-preview">
+                        <!-- Las imágenes seleccionadas se mostrarán aquí -->
+                    </div>
+                </div>
+                
+                <input type="hidden" id="product-id" value="">
+                <div class="form-required-note">* Campos obligatorios</div>
+            </div>
+            <div class="modal-footer">
+                <button class="cancel-btn" id="cancel-product">Cancelar</button>
+                <button class="save-modal-btn" id="save-product">Guardar Producto</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para promociones -->
+    <div class="admin-modal" id="promotion-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="promotion-modal-title"><i class="fas fa-percentage"></i> Agregar Promoción</h3>
+                <button class="close-modal" id="close-promotion-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="promotion-title">Título de la promoción *</label>
+                    <input type="text" id="promotion-title" placeholder="Ej: ¡Oferta Especial! 50% OFF" maxlength="100">
+                    <div class="char-count"><span id="promotion-title-chars">0</span>/100 caracteres</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="promotion-description">Descripción *</label>
+                    <textarea id="promotion-description" rows="3" placeholder="Describe la promoción..." maxlength="300"></textarea>
+                    <div class="char-count"><span id="promotion-desc-chars">0</span>/300 caracteres</div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="promotion-active" checked>
+                        <span>Promoción activa (aparecerá en la tienda)</span>
+                    </label>
+                </div>
+                
+                <input type="hidden" id="promotion-id" value="">
+                <div class="form-required-note">* Campos obligatorios</div>
+            </div>
+            <div class="modal-footer">
+                <button class="cancel-btn" id="cancel-promotion">Cancelar</button>
+                <button class="save-modal-btn" id="save-promotion">Guardar Promoción</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para slides -->
+    <div class="admin-modal" id="slide-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="slide-modal-title"><i class="fas fa-image"></i> Agregar Slide</h3>
+                <button class="close-modal" id="close-slide-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="slide-title">Título *</label>
+                    <input type="text" id="slide-title" placeholder="Ej: Nueva Colección Verano" maxlength="100">
+                    <div class="char-count"><span id="slide-title-chars">0</span>/100 caracteres</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="slide-description">Descripción *</label>
+                    <textarea id="slide-description" rows="3" placeholder="Texto descriptivo..." maxlength="200"></textarea>
+                    <div class="char-count"><span id="slide-desc-chars">0</span>/200 caracteres</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="slide-image-upload">Imagen de fondo (JPG o PNG) *</label>
+                    <div class="upload-container">
+                        <input type="file" id="slide-image-upload" accept=".jpg,.jpeg,.png" style="display: none;">
+                        <button id="slide-upload-btn" class="upload-btn"><i class="fas fa-upload"></i> Subir Imagen</button>
+                        <span class="upload-hint">Tamaño recomendado: 1200x500px</span>
+                    </div>
+                    <div class="preview-container">
+                        <img id="slide-image-preview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='150' viewBox='0 0 300 150'%3E%3Crect width='300' height='150' fill='%23f0f0f0'/%3E%3Ctext x='150' y='75' font-family='Arial' font-size='16' text-anchor='middle' dominant-baseline='middle' fill='%23666'%3EVista previa%3C/text%3E%3C/svg%3E" alt="Vista previa">
+                    </div>
+                </div>
+                
+                <input type="hidden" id="slide-id" value="">
+                <div class="form-required-note">* Campos obligatorios</div>
+            </div>
+            <div class="modal-footer">
+                <button class="cancel-btn" id="cancel-slide">Cancelar</button>
+                <button class="save-modal-btn" id="save-slide">Guardar Slide</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmación para eliminar -->
+    <div class="admin-modal" id="confirm-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-exclamation-triangle"></i> Confirmar eliminación</h3>
+                <button class="close-modal" id="close-confirm-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="confirm-icon">
+                    <i class="fas fa-trash"></i>
+                </div>
+                <p id="confirm-message">¿Está seguro de que desea eliminar este elemento?</p>
+                <input type="hidden" id="confirm-item-id" value="">
+                <input type="hidden" id="confirm-item-type" value="">
+            </div>
+            <div class="modal-footer">
+                <button class="cancel-btn" id="cancel-confirm">Cancelar</button>
+                <button class="delete-confirm-btn" id="confirm-delete">Eliminar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coquette Sport - Tienda Deportiva</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Estilos temporales para imágenes de carga */
+        .loading-placeholder {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sistema de acceso al admin por teclado (sin overlay bloqueante) -->
+
+    <!-- Barra lateral -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-container">
+                <img id="store-logo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='80' viewBox='0 0 150 80'%3E%3Crect width='150' height='80' fill='%23C5A451'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial, sans-serif' font-size='14' font-weight='bold' fill='%23000' text-anchor='middle' dy='.3em'%3ECOQUETTE SPORT%3C/text%3E%3C/svg%3E" alt="Coquette Sport Logo">
+            </div>
+            <button class="close-sidebar" id="close-sidebar">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="sidebar-content">
+            <nav class="sidebar-nav">
+                <h3>Categorías</h3>
+                <ul id="categories-list">
+                    <li><a href="#" data-category="all">Todos los productos</a></li>
+                </ul>
+                
+                <h3>Contacto</h3>
+                <div class="contact-info" id="contact-info">
+                    <p><i class="fas fa-map-marker-alt"></i> <span id="store-location">Cargando...</span></p>
+                    <p><i class="fas fa-phone"></i> <span id="store-phone">Cargando...</span></p>
+                </div>
+                
+                <div class="sidebar-footer">
+                    <p id="store-description">Cargando descripción...</p>
+                </div>
+            </nav>
+        </div>
+    </aside>
+
+    <!-- Overlay para cerrar sidebar -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- Header principal -->
+    <header class="main-header">
+        <div class="container">
+            <button class="menu-toggle" id="menu-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            
+            <div class="logo">
+                <img id="header-logo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='80' viewBox='0 0 150 80'%3E%3Crect width='150' height='80' fill='%23C5A451'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial, sans-serif' font-size='14' font-weight='bold' fill='%23000' text-anchor='middle' dy='.3em'%3ECOQUETTE SPORT%3C/text%3E%3C/svg%3E" alt="Coquette Sport Logo">
+            </div>
+            
+            <div class="search-container">
+                <input type="text" id="search-input" placeholder="Buscar productos...">
+                <button id="search-button"><i class="fas fa-search"></i></button>
+            </div>
+            
+            <div class="cart-container">
+                <button class="cart-btn" id="cart-btn">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-count" id="cart-count">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Carrito de compras -->
+    <div class="cart-sidebar" id="cart-sidebar">
+        <div class="cart-header">
+            <h3>Tu Carrito</h3>
+            <button class="close-cart" id="close-cart">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="cart-items" id="cart-items">
+            <div class="empty-cart">
+                <i class="fas fa-shopping-cart"></i>
+                <p>Tu carrito está vacío</p>
+            </div>
+        </div>
+        
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>Total:</span>
+                <span id="cart-total">$0.00</span>
+            </div>
+            <button class="checkout-btn" id="checkout-btn">
+                <i class="fab fa-whatsapp"></i> Completar pedido por WhatsApp
+            </button>
+        </div>
+    </div>
+
+    <!-- Contenido principal -->
+    <main class="main-content">
+        <section class="hero">
+            <div class="hero-slider">
+                <!-- Los slides se cargarán dinámicamente -->
+                <div class="hero-slide active" style="background: linear-gradient(135deg, #000 0%, #333 100%);">
+                    <div class="hero-content">
+                        <h1>Coquette Sport</h1>
+                        <p>Tu tienda de ropa deportiva de confianza</p>
+                        <a href="#products" class="hero-btn">Ver Colección</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section class="categories-section" id="categories">
+            <div class="container">
+                <h2 class="section-title">Categorías</h2>
+                <div class="categories-grid" id="categories-grid">
+                    <!-- Las categorías se cargarán dinámicamente -->
+                    <div class="category-card loading-placeholder" style="height: 220px;"></div>
+                    <div class="category-card loading-placeholder" style="height: 220px;"></div>
+                    <div class="category-card loading-placeholder" style="height: 220px;"></div>
+                    <div class="category-card loading-placeholder" style="height: 220px;"></div>
+                </div>
+            </div>
+        </section>
+        
+        <section class="products-section" id="products">
+            <div class="container">
+                <h2 class="section-title">Productos Destacados</h2>
+                <div class="products-filter">
+                    <button class="filter-btn active" data-filter="all">Todos</button>
+                    <!-- Los filtros se cargarán dinámicamente -->
+                </div>
+                <div class="products-grid" id="products-grid">
+                    <!-- Los productos se cargarán dinámicamente -->
+                    <div class="product-card loading-placeholder" style="height: 400px;"></div>
+                    <div class="product-card loading-placeholder" style="height: 400px;"></div>
+                    <div class="product-card loading-placeholder" style="height: 400px;"></div>
+                </div>
+            </div>
+        </section>
+        
+        <section class="about-section">
+            <div class="container">
+                <h2 class="section-title">Sobre Coquette Sport</h2>
+                <div class="about-content">
+                    <div class="about-text">
+                        <p id="store-about">Cargando información sobre la tienda...</p>
+                        <div class="contact-details">
+                            <p><i class="fas fa-map-marker-alt"></i> <span id="store-address">Cargando dirección...</span></p>
+                            <p><i class="fas fa-phone"></i> <span id="store-contact">Cargando teléfono...</span></p>
+                            <p><i class="fas fa-clock"></i> <span>Lunes a Viernes: 9:00 - 20:00</span></p>
+                        </div>
+                    </div>
+                    <div class="about-image">
+                        <div class="loading-placeholder" style="width: 100%; height: 300px; border-radius: 8px;"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal de producto -->
+    <div class="product-modal" id="product-modal">
+        <div class="product-modal-content">
+            <button class="close-product-modal" id="close-product-modal">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="product-modal-body">
+                <div class="product-modal-images">
+                    <div class="main-image">
+                        <div class="loading-placeholder" style="width: 100%; height: 400px;"></div>
+                    </div>
+                    <div class="thumbnails" id="modal-thumbnails">
+                        <!-- Las miniaturas se cargarán dinámicamente -->
+                    </div>
+                </div>
+                <div class="product-modal-details">
+                    <h2 id="modal-product-name">Cargando nombre...</h2>
+                    <div class="product-price">
+                        <span class="current-price" id="modal-product-price">$0.00</span>
+                        <span class="original-price" id="modal-original-price"></span>
+                    </div>
+                    <p class="product-description" id="modal-product-description">Cargando descripción...</p>
+                    <div class="product-actions">
+                        <div class="quantity-selector">
+                            <button class="quantity-btn minus">-</button>
+                            <input type="number" id="modal-quantity" value="1" min="1" max="10">
+                            <button class="quantity-btn plus">+</button>
+                        </div>
+                        <button class="add-to-cart-btn" id="modal-add-to-cart">
+                            <i class="fas fa-cart-plus"></i> Agregar al Carrito
+                        </button>
+                    </div>
+                    <div class="product-info">
+                        <p><strong>Categoría:</strong> <span id="modal-product-category">Cargando...</span></p>
+                        <p><strong>Disponibilidad:</strong> <span class="in-stock">En stock</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <img id="footer-logo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='80' viewBox='0 0 150 80'%3E%3Crect width='150' height='80' fill='%23C5A451'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial, sans-serif' font-size='14' font-weight='bold' fill='%23000' text-anchor='middle' dy='.3em'%3ECOQUETTE SPORT%3C/text%3E%3C/svg%3E" alt="Coquette Sport Logo">
+                    <p id="footer-description">Cargando descripción...</p>
+                </div>
+                <div class="footer-links">
+                    <h3>Enlaces Rápidos</h3>
+                    <ul>
+                        <li><a href="#products">Productos</a></li>
+                        <li><a href="#categories">Categorías</a></li>
+                        <li><a href="#contact">Contacto</a></li>
+                    </ul>
+                </div>
+                <div class="footer-contact" id="footer-contact">
+                    <h3>Contacto</h3>
+                    <p><i class="fas fa-map-marker-alt"></i> <span id="footer-location">Cargando ubicación...</span></p>
+                    <p><i class="fas fa-phone"></i> <span id="footer-phone">Cargando teléfono...</span></p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2023 Coquette Sport. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
