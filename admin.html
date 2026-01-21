@@ -113,13 +113,120 @@
             border-left-color: #ff9800;
             color: #e65100;
         }
+        
+        /* Estilos para notificaciones */
+        .admin-notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transform: translateX(150%);
+            transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            max-width: 400px;
+            border-left: 5px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .admin-notification.active {
+            transform: translateX(0);
+        }
+        
+        .admin-notification i {
+            font-size: 24px;
+        }
+        
+        .admin-notification span {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        /* Mejoras para contadores de caracteres */
+        .char-count {
+            text-align: right;
+            font-size: 14px;
+            margin-top: 5px;
+            color: #666;
+        }
+        
+        .char-count.warning {
+            color: #ff9800;
+        }
+        
+        .char-count.error {
+            color: #f44336;
+        }
+        
+        /* Estilos para badges en tablas */
+        .product-count-badge, .category-badge, .stock-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .product-count-badge {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+        
+        .category-badge {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .stock-badge.in-stock {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        /* Estilos para imágenes en tablas */
+        .image-cell img, .image-gallery-preview img {
+            border-radius: 6px;
+            border: 2px solid #f0f0f0;
+            transition: all 0.3s;
+        }
+        
+        .image-cell img:hover, .image-gallery-preview img:hover {
+            transform: scale(1.05);
+            border-color: #FFD700;
+        }
+        
+        .image-gallery-preview {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .image-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #FFD700;
+            color: #000;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            border: 2px solid white;
+        }
     </style>
 </head>
 <body>
     <div class="admin-container">
         <header class="admin-header">
             <div class="container">
-                <h1><i class="fas fa-cog"></i> Panel de Administración</h1>
+                <h1><i class="fas fa-cog"></i> Panel de Administración - Coquette Sport</h1>
                 <nav class="admin-nav">
                     <button class="nav-btn active" data-section="store">Tienda</button>
                     <button class="nav-btn" data-section="categories">Categorías</button>
@@ -138,7 +245,7 @@
                     <h2><i class="fas fa-store"></i> Configuración de la Tienda</h2>
                     
                     <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i> Los cambios se guardan automáticamente cuando haces clic fuera de los campos.
+                        <i class="fas fa-info-circle"></i> Los cambios se guardan automáticamente en Firebase cuando haces clic fuera de los campos.
                     </div>
                     
                     <div class="admin-form">
@@ -147,7 +254,7 @@
                             <div class="upload-container">
                                 <input type="file" id="logo-upload" accept=".jpg,.jpeg,.png,.gif,.svg" style="display: none;">
                                 <button id="logo-upload-btn" class="upload-btn"><i class="fas fa-upload"></i> Subir Imagen</button>
-                                <span class="upload-hint">Tamaño recomendado: 300x150px</span>
+                                <span class="upload-hint">Tamaño recomendado: 300x150px. Se subirá a Firebase Storage</span>
                             </div>
                             <div class="preview-container">
                                 <img id="logo-preview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='150' viewBox='0 0 300 150'%3E%3Crect width='300' height='150' fill='%23f0f0f0'/%3E%3Ctext x='150' y='75' font-family='Arial' font-size='16' text-anchor='middle' dominant-baseline='middle' fill='%23666'%3ELogo de la tienda%3C/text%3E%3C/svg%3E" alt="Vista previa del logo">
@@ -178,7 +285,7 @@
                         </div>
                         
                         <button id="save-store-btn" class="save-btn">
-                            <i class="fas fa-save"></i> Guardar Configuración
+                            <i class="fas fa-save"></i> Guardar Configuración en Firebase
                         </button>
                     </div>
                 </section>
@@ -216,7 +323,7 @@
                                     <td colspan="5" style="text-align: center; padding: 40px;">
                                         <div class="loading-spinner">
                                             <i class="fas fa-spinner fa-spin"></i>
-                                            <p>Cargando categorías...</p>
+                                            <p>Cargando categorías desde Firebase...</p>
                                         </div>
                                     </td>
                                 </tr>
@@ -256,7 +363,7 @@
                                     <td colspan="7" style="text-align: center; padding: 40px;">
                                         <div class="loading-spinner">
                                             <i class="fas fa-spinner fa-spin"></i>
-                                            <p>Cargando productos...</p>
+                                            <p>Cargando productos desde Firebase...</p>
                                         </div>
                                     </td>
                                 </tr>
@@ -283,7 +390,7 @@
                             <div class="promotion-card" style="text-align: center; padding: 40px;">
                                 <div class="loading-spinner">
                                     <i class="fas fa-spinner fa-spin"></i>
-                                    <p>Cargando promociones...</p>
+                                    <p>Cargando promociones desde Firebase...</p>
                                 </div>
                             </div>
                         </div>
@@ -308,7 +415,7 @@
                             <div class="slide-card" style="text-align: center; padding: 40px;">
                                 <div class="loading-spinner">
                                     <i class="fas fa-spinner fa-spin"></i>
-                                    <p>Cargando slides...</p>
+                                    <p>Cargando slides desde Firebase...</p>
                                 </div>
                             </div>
                         </div>
@@ -343,8 +450,8 @@
                     <label for="category-image-upload">Imagen de la categoría (JPG, PNG o GIF) *</label>
                     <div class="upload-container">
                         <input type="file" id="category-image-upload" accept=".jpg,.jpeg,.png,.gif" style="display: none;">
-                        <button id="category-upload-btn" class="upload-btn"><i class="fas fa-upload"></i> Subir Imagen</button>
-                        <span class="upload-hint">Tamaño recomendado: 600x300px</span>
+                        <button id="category-upload-btn" class="upload-btn"><i class="fas fa-upload"></i> Subir Imagen a Firebase</button>
+                        <span class="upload-hint">Tamaño recomendado: 600x300px. Se subirá a Firebase Storage</span>
                     </div>
                     <div class="preview-container">
                         <img id="category-image-preview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='150' viewBox='0 0 300 150'%3E%3Crect width='300' height='150' fill='%23f0f0f0'/%3E%3Ctext x='150' y='75' font-family='Arial' font-size='16' text-anchor='middle' dominant-baseline='middle' fill='%23666'%3EVista previa%3C/text%3E%3C/svg%3E" alt="Vista previa">
@@ -356,7 +463,9 @@
             </div>
             <div class="modal-footer">
                 <button class="cancel-btn" id="cancel-category">Cancelar</button>
-                <button class="save-modal-btn" id="save-category">Guardar Categoría</button>
+                <button class="save-modal-btn" id="save-category">
+                    <i class="fas fa-cloud-upload-alt"></i> Guardar en Firebase
+                </button>
             </div>
         </div>
     </div>
@@ -415,8 +524,8 @@
                     <label>Imágenes del producto (JPG o PNG, máximo 5) *</label>
                     <div class="upload-container">
                         <input type="file" id="product-images-upload" accept=".jpg,.jpeg,.png" multiple style="display: none;">
-                        <button id="product-images-upload-btn" class="upload-btn"><i class="fas fa-upload"></i> Subir Imágenes</button>
-                        <span class="upload-hint">Máximo 5 imágenes. Tamaño recomendado: 600x600px</span>
+                        <button id="product-images-upload-btn" class="upload-btn"><i class="fas fa-upload"></i> Subir Imágenes a Firebase</button>
+                        <span class="upload-hint">Máximo 5 imágenes. Tamaño recomendado: 600x600px. Se subirán a Firebase Storage</span>
                     </div>
                     <div class="image-counter" id="image-counter">0/5 imágenes seleccionadas</div>
                     <div class="preview-container" id="product-images-preview">
@@ -429,7 +538,9 @@
             </div>
             <div class="modal-footer">
                 <button class="cancel-btn" id="cancel-product">Cancelar</button>
-                <button class="save-modal-btn" id="save-product">Guardar Producto</button>
+                <button class="save-modal-btn" id="save-product">
+                    <i class="fas fa-cloud-upload-alt"></i> Guardar en Firebase
+                </button>
             </div>
         </div>
     </div>
@@ -468,7 +579,9 @@
             </div>
             <div class="modal-footer">
                 <button class="cancel-btn" id="cancel-promotion">Cancelar</button>
-                <button class="save-modal-btn" id="save-promotion">Guardar Promoción</button>
+                <button class="save-modal-btn" id="save-promotion">
+                    <i class="fas fa-cloud-upload-alt"></i> Guardar en Firebase
+                </button>
             </div>
         </div>
     </div>
@@ -499,8 +612,8 @@
                     <label for="slide-image-upload">Imagen de fondo (JPG o PNG) *</label>
                     <div class="upload-container">
                         <input type="file" id="slide-image-upload" accept=".jpg,.jpeg,.png" style="display: none;">
-                        <button id="slide-upload-btn" class="upload-btn"><i class="fas fa-upload"></i> Subir Imagen</button>
-                        <span class="upload-hint">Tamaño recomendado: 1200x500px</span>
+                        <button id="slide-upload-btn" class="upload-btn"><i class="fas fa-upload"></i> Subir Imagen a Firebase</button>
+                        <span class="upload-hint">Tamaño recomendado: 1200x500px. Se subirá a Firebase Storage</span>
                     </div>
                     <div class="preview-container">
                         <img id="slide-image-preview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='150' viewBox='0 0 300 150'%3E%3Crect width='300' height='150' fill='%23f0f0f0'/%3E%3Ctext x='150' y='75' font-family='Arial' font-size='16' text-anchor='middle' dominant-baseline='middle' fill='%23666'%3EVista previa%3C/text%3E%3C/svg%3E" alt="Vista previa">
@@ -512,7 +625,9 @@
             </div>
             <div class="modal-footer">
                 <button class="cancel-btn" id="cancel-slide">Cancelar</button>
-                <button class="save-modal-btn" id="save-slide">Guardar Slide</button>
+                <button class="save-modal-btn" id="save-slide">
+                    <i class="fas fa-cloud-upload-alt"></i> Guardar en Firebase
+                </button>
             </div>
         </div>
     </div>
@@ -536,11 +651,22 @@
             </div>
             <div class="modal-footer">
                 <button class="cancel-btn" id="cancel-confirm">Cancelar</button>
-                <button class="delete-confirm-btn" id="confirm-delete">Eliminar</button>
+                <button class="delete-confirm-btn" id="confirm-delete">
+                    <i class="fas fa-trash"></i> Eliminar de Firebase
+                </button>
             </div>
         </div>
     </div>
 
-    <script src="js/admin.js"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+
+    <!-- Configuración de Firebase -->
+    <script src="js/firebase-config.js"></script>
+
+    <!-- Admin con Firebase -->
+    <script src="js/admin-firebase.js"></script>
 </body>
 </html>

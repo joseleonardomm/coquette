@@ -13,11 +13,93 @@
             background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
             background-size: 200% 100%;
             animation: loading 1.5s infinite;
+            border-radius: 8px;
         }
         
         @keyframes loading {
             0% { background-position: 200% 0; }
             100% { background-position: -200% 0; }
+        }
+        
+        /* Estilos para notificaciones */
+        .notification {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #C5A451 0%, #d4b668 100%);
+            color: #000;
+            padding: 18px 25px;
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(197, 164, 81, 0.4);
+            z-index: 3000;
+            font-weight: 700;
+            animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 2px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+        
+        /* Estilos para estado vacío */
+        .no-results, .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px;
+            color: #666;
+        }
+        
+        .no-results i, .empty-state i {
+            font-size: 60px;
+            color: #ddd;
+            margin-bottom: 25px;
+        }
+        
+        .no-results h3, .empty-state h3 {
+            margin-bottom: 15px;
+            font-weight: 700;
+            font-size: 24px;
+        }
+        
+        .no-results p, .empty-state p {
+            color: #999;
+            font-size: 16px;
+        }
+        
+        /* Mensaje de carga Firebase */
+        .firebase-loading {
+            text-align: center;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #C5A451;
+        }
+        
+        .firebase-loading i {
+            color: #C5A451;
+            margin-right: 10px;
         }
     </style>
 </head>
@@ -44,12 +126,12 @@
                 
                 <h3>Contacto</h3>
                 <div class="contact-info" id="contact-info">
-                    <p><i class="fas fa-map-marker-alt"></i> <span id="store-location">Cargando...</span></p>
-                    <p><i class="fas fa-phone"></i> <span id="store-phone">Cargando...</span></p>
+                    <p><i class="fas fa-map-marker-alt"></i> <span id="store-location">Cargando desde Firebase...</span></p>
+                    <p><i class="fas fa-phone"></i> <span id="store-phone">Cargando desde Firebase...</span></p>
                 </div>
                 
                 <div class="sidebar-footer">
-                    <p id="store-description">Cargando descripción...</p>
+                    <p id="store-description">Cargando descripción desde Firebase...</p>
                 </div>
             </nav>
         </div>
@@ -114,11 +196,11 @@
     <main class="main-content">
         <section class="hero">
             <div class="hero-slider">
-                <!-- Los slides se cargarán dinámicamente -->
+                <!-- Los slides se cargarán dinámicamente desde Firebase -->
                 <div class="hero-slide active" style="background: linear-gradient(135deg, #000 0%, #333 100%);">
                     <div class="hero-content">
                         <h1>Coquette Sport</h1>
-                        <p>Tu tienda de ropa deportiva de confianza</p>
+                        <p>Cargando slides desde Firebase...</p>
                         <a href="#products" class="hero-btn">Ver Colección</a>
                     </div>
                 </div>
@@ -128,8 +210,11 @@
         <section class="categories-section" id="categories">
             <div class="container">
                 <h2 class="section-title">Categorías</h2>
+                <div class="firebase-loading" id="categories-loading">
+                    <i class="fas fa-spinner fa-spin"></i> Cargando categorías desde Firebase...
+                </div>
                 <div class="categories-grid" id="categories-grid">
-                    <!-- Las categorías se cargarán dinámicamente -->
+                    <!-- Las categorías se cargarán dinámicamente desde Firebase -->
                     <div class="category-card loading-placeholder" style="height: 220px;"></div>
                     <div class="category-card loading-placeholder" style="height: 220px;"></div>
                     <div class="category-card loading-placeholder" style="height: 220px;"></div>
@@ -141,12 +226,15 @@
         <section class="products-section" id="products">
             <div class="container">
                 <h2 class="section-title">Productos Destacados</h2>
+                <div class="firebase-loading" id="products-loading">
+                    <i class="fas fa-spinner fa-spin"></i> Cargando productos desde Firebase...
+                </div>
                 <div class="products-filter">
                     <button class="filter-btn active" data-filter="all">Todos</button>
                     <!-- Los filtros se cargarán dinámicamente -->
                 </div>
                 <div class="products-grid" id="products-grid">
-                    <!-- Los productos se cargarán dinámicamente -->
+                    <!-- Los productos se cargarán dinámicamente desde Firebase -->
                     <div class="product-card loading-placeholder" style="height: 400px;"></div>
                     <div class="product-card loading-placeholder" style="height: 400px;"></div>
                     <div class="product-card loading-placeholder" style="height: 400px;"></div>
@@ -159,7 +247,7 @@
                 <h2 class="section-title">Sobre Coquette Sport</h2>
                 <div class="about-content">
                     <div class="about-text">
-                        <p id="store-about">Cargando información sobre la tienda...</p>
+                        <p id="store-about">Cargando información sobre la tienda desde Firebase...</p>
                         <div class="contact-details">
                             <p><i class="fas fa-map-marker-alt"></i> <span id="store-address">Cargando dirección...</span></p>
                             <p><i class="fas fa-phone"></i> <span id="store-contact">Cargando teléfono...</span></p>
@@ -220,7 +308,7 @@
             <div class="footer-content">
                 <div class="footer-logo">
                     <img id="footer-logo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='80' viewBox='0 0 150 80'%3E%3Crect width='150' height='80' fill='%23C5A451'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial, sans-serif' font-size='14' font-weight='bold' fill='%23000' text-anchor='middle' dy='.3em'%3ECOQUETTE SPORT%3C/text%3E%3C/svg%3E" alt="Coquette Sport Logo">
-                    <p id="footer-description">Cargando descripción...</p>
+                    <p id="footer-description">Cargando descripción desde Firebase...</p>
                 </div>
                 <div class="footer-links">
                     <h3>Enlaces Rápidos</h3>
@@ -237,11 +325,23 @@
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2023 Coquette Sport. Todos los derechos reservados.</p>
+                <p>&copy; 2024 Coquette Sport. Todos los derechos reservados.</p>
+                <p style="font-size: 12px; color: #999; margin-top: 10px;">
+                    <i class="fas fa-database"></i> Datos almacenados en Firebase
+                </p>
             </div>
         </div>
     </footer>
 
-    <script src="js/script.js"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+
+    <!-- Configuración de Firebase -->
+    <script src="js/firebase-config.js"></script>
+
+    <!-- Script principal con Firebase -->
+    <script src="js/script-firebase.js"></script>
 </body>
 </html>

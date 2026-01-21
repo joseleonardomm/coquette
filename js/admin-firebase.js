@@ -1,4 +1,7 @@
-// Variables globales para almacenar datos
+// admin-firebase.js
+// Panel de administración con Firebase
+
+// Variables globales
 let storeData = {
     logo: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='80' viewBox='0 0 150 80'%3E%3Crect width='150' height='80' fill='%23C5A451'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial, sans-serif' font-size='14' font-weight='bold' fill='%23000' text-anchor='middle' dy='.3em'%3ECOQUETTE SPORT%3C/text%3E%3C/svg%3E",
     whatsapp: "+51987654321",
@@ -14,6 +17,7 @@ let heroSlides = [];
 
 // Variables para imágenes temporales
 let productImages = [];
+let currentUploadingImages = [];
 
 // Referencias a elementos del DOM
 let navButtons, adminSections, saveStoreBtn, addCategoryBtn, addProductBtn, addPromotionBtn, addSlideBtn;
@@ -21,30 +25,28 @@ let notification, categoryModal, productModal, promotionModal, slideModal, confi
 
 // Inicializar el panel de administración
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("Panel de administración inicializando...");
+    console.log("Panel de administración con Firebase inicializando...");
+    
+    // Verificar si Firebase está cargado
+    if (typeof firebase === 'undefined') {
+        console.error("Firebase no está cargado. Asegúrate de incluir firebase-config.js");
+        showNotification('Error: Firebase no está configurado', 'error');
+        return;
+    }
     
     // Inicializar referencias a elementos del DOM
     initializeDOMElements();
     
-    // Cargar datos del localStorage
-    loadAllData();
+    // Cargar datos de Firebase
+    loadAllDataFromFirebase();
     
     // Configurar event listeners
     setupEventListeners();
     
-    // Renderizar datos iniciales
-    renderCategoriesTable();
-    renderProductsTable();
-    renderPromotions();
-    renderSlides();
-    
-    // Cargar datos en formulario de tienda
-    populateStoreForm();
-    
     // Configurar contadores de caracteres
     setupCharacterCounters();
     
-    console.log("Panel de administración listo");
+    console.log("Panel de administración con Firebase listo");
 });
 
 // Inicializar referencias a elementos del DOM
@@ -117,60 +119,207 @@ function updateCounterStyle(counter, length, maxLength) {
     }
 }
 
-// Cargar todos los datos del localStorage
-function loadAllData() {
+// Cargar todos los datos desde Firebase
+async function loadAllDataFromFirebase() {
     try {
-        console.log("Cargando datos del localStorage...");
+        console.log("Cargando datos desde Firebase...");
         
-        const savedStoreData = localStorage.getItem('coquetteSportStoreData');
-        const savedCategories = localStorage.getItem('coquetteSportCategories');
-        const savedProducts = localStorage.getItem('coquetteSportProducts');
-        const savedPromotions = localStorage.getItem('coquetteSportPromotions');
-        const savedHeroSlides = localStorage.getItem('coquetteSportHeroSlides');
-        
-        if (savedStoreData) {
-            storeData = JSON.parse(savedStoreData);
-            console.log("Datos de tienda cargados:", storeData);
+        // Cargar datos de la tienda
+        const storeSnapshot = await db.getStoreData();
+        if (storeSnapshot.exists()) {
+            storeData = storeSnapshot.val();
+            console.log("Datos de tienda cargados desde Firebase:", storeData);
         }
         
-        if (savedCategories) {
-            categories = JSON.parse(savedCategories);
-            console.log("Categorías cargadas:", categories.length);
+        // Cargar categorías
+        const categoriesSnapshot = await db.getCategories();
+        if (categoriesSnapshot.exists()) {
+            const cats = categoriesSnapshot.val();
+            categories = cats ? Object.values(cats) : [];
+            console.log("Categorías cargadas desde Firebase:", categories.length);
         }
         
-        if (savedProducts) {
-            products = JSON.parse(savedProducts);
-            console.log("Productos cargados:", products.length);
+        // Cargar productos
+        const productsSnapshot = await db.getProducts();
+        if (productsSnapshot.exists()) {
+            const prods = productsSnapshot.val();
+            products = prods ? Object.values(prods) : [];
+            console.log("Productos cargados desde Firebase:", products.length);
         }
         
-        if (savedPromotions) {
-            promotions = JSON.parse(savedPromotions);
-            console.log("Promociones cargadas:", promotions.length);
+        // Cargar promociones
+        const promotionsSnapshot = await db.getPromotions();
+        if (promotionsSnapshot.exists()) {
+            const proms = promotionsSnapshot.val();
+            promotions = proms ? Object.values(proms) : [];
+            console.log("Promociones cargadas desde Firebase:", promotions.length);
         }
         
-        if (savedHeroSlides) {
-            heroSlides = JSON.parse(savedHeroSlides);
-            console.log("Slides cargados:", heroSlides.length);
+        // Cargar slides
+        const slidesSnapshot = await db.getSlides();
+        if (slidesSnapshot.exists()) {
+            const sls = slidesSnapshot.val();
+            heroSlides = sls ? Object.values(sls) : [];
+            console.log("Slides cargados desde Firebase:", heroSlides.length);
         }
         
     } catch (error) {
-        console.error("Error cargando datos:", error);
-        showNotification('Error al cargar datos guardados', 'error');
+        console.error("Error cargando datos desde Firebase:", error);
+        showNotification('Error al cargar datos desde Firebase', 'error');
+        
+        // Cargar datos de ejemplo si hay error
+        loadSampleDataIfEmpty();
+    }
+    
+    // Renderizar datos iniciales
+    renderCategoriesTable();
+    renderProductsTable();
+    renderPromotions();
+    renderSlides();
+    
+    // Cargar datos en formulario de tienda
+    populateStoreForm();
+}
+
+// Guardar configuración de la tienda en Firebase
+async function saveStoreDataToFirebase() {
+    try {
+        await db.saveStoreData(storeData);
+        console.log("Datos de tienda guardados en Firebase");
+        return true;
+    } catch (error) {
+        console.error("Error guardando datos en Firebase:", error);
+        throw error;
     }
 }
 
-// Guardar todos los datos en localStorage
-function saveAllData() {
+// Guardar categoría en Firebase
+async function saveCategoryToFirebase(category) {
     try {
-        localStorage.setItem('coquetteSportStoreData', JSON.stringify(storeData));
-        localStorage.setItem('coquetteSportCategories', JSON.stringify(categories));
-        localStorage.setItem('coquetteSportProducts', JSON.stringify(products));
-        localStorage.setItem('coquetteSportPromotions', JSON.stringify(promotions));
-        localStorage.setItem('coquetteSportHeroSlides', JSON.stringify(heroSlides));
-        console.log("Datos guardados en localStorage");
+        await db.saveCategory(category.id, category);
+        console.log("Categoría guardada en Firebase:", category.id);
+        return true;
     } catch (error) {
-        console.error("Error guardando datos:", error);
-        showNotification('Error al guardar datos', 'error');
+        console.error("Error guardando categoría en Firebase:", error);
+        throw error;
+    }
+}
+
+// Guardar producto en Firebase
+async function saveProductToFirebase(product) {
+    try {
+        await db.saveProduct(product.id, product);
+        console.log("Producto guardado en Firebase:", product.id);
+        return true;
+    } catch (error) {
+        console.error("Error guardando producto en Firebase:", error);
+        throw error;
+    }
+}
+
+// Guardar promoción en Firebase
+async function savePromotionToFirebase(promotion) {
+    try {
+        await db.savePromotion(promotion.id, promotion);
+        console.log("Promoción guardada en Firebase:", promotion.id);
+        return true;
+    } catch (error) {
+        console.error("Error guardando promoción en Firebase:", error);
+        throw error;
+    }
+}
+
+// Guardar slide en Firebase
+async function saveSlideToFirebase(slide) {
+    try {
+        await db.saveSlide(slide.id, slide);
+        console.log("Slide guardado en Firebase:", slide.id);
+        return true;
+    } catch (error) {
+        console.error("Error guardando slide en Firebase:", error);
+        throw error;
+    }
+}
+
+// Subir imagen a Firebase Storage
+async function uploadImageToFirebase(file, type, productId = null) {
+    try {
+        let path = '';
+        
+        switch(type) {
+            case 'logo':
+                path = 'store/logo';
+                break;
+            case 'category':
+                path = 'categories';
+                break;
+            case 'product':
+                path = `products/${productId || 'temp'}`;
+                break;
+            case 'slide':
+                path = 'slides';
+                break;
+            default:
+                path = 'uploads';
+        }
+        
+        console.log("Subiendo imagen a Firebase Storage:", file.name, "en ruta:", path);
+        
+        const downloadURL = await storageFunctions.uploadImage(file, path);
+        console.log("Imagen subida exitosamente. URL:", downloadURL);
+        
+        return downloadURL;
+    } catch (error) {
+        console.error("Error subiendo imagen a Firebase:", error);
+        throw error;
+    }
+}
+
+// Eliminar categoría de Firebase
+async function deleteCategoryFromFirebase(categoryId) {
+    try {
+        await db.deleteCategory(categoryId);
+        console.log("Categoría eliminada de Firebase:", categoryId);
+        return true;
+    } catch (error) {
+        console.error("Error eliminando categoría de Firebase:", error);
+        throw error;
+    }
+}
+
+// Eliminar producto de Firebase
+async function deleteProductFromFirebase(productId) {
+    try {
+        await db.deleteProduct(productId);
+        console.log("Producto eliminada de Firebase:", productId);
+        return true;
+    } catch (error) {
+        console.error("Error eliminando producto de Firebase:", error);
+        throw error;
+    }
+}
+
+// Eliminar promoción de Firebase
+async function deletePromotionFromFirebase(promotionId) {
+    try {
+        await db.deletePromotion(promotionId);
+        console.log("Promoción eliminada de Firebase:", promotionId);
+        return true;
+    } catch (error) {
+        console.error("Error eliminando promoción de Firebase:", error);
+        throw error;
+    }
+}
+
+// Eliminar slide de Firebase
+async function deleteSlideFromFirebase(slideId) {
+    try {
+        await db.deleteSlide(slideId);
+        console.log("Slide eliminada de Firebase:", slideId);
+        return true;
+    } catch (error) {
+        console.error("Error eliminando slide de Firebase:", error);
+        throw error;
     }
 }
 
@@ -246,8 +395,37 @@ function setupImageUploadEvents() {
             logoUpload.click();
         });
         
-        logoUpload.addEventListener('change', function(e) {
-            handleImageUpload(e, 'logo-preview');
+        logoUpload.addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            // Verificar que sea una imagen
+            if (!file.type.match('image.*')) {
+                showNotification('Por favor, selecciona un archivo de imagen (JPG, PNG, GIF)', 'error');
+                return;
+            }
+            
+            // Verificar tamaño (máximo 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                showNotification('La imagen es demasiado grande (máximo 5MB)', 'error');
+                return;
+            }
+            
+            try {
+                showNotification('Subiendo imagen del logo...', 'warning');
+                const downloadURL = await uploadImageToFirebase(file, 'logo');
+                
+                const preview = document.getElementById('logo-preview');
+                if (preview) {
+                    preview.src = downloadURL;
+                }
+                
+                storeData.logo = downloadURL;
+                await saveStoreDataToFirebase();
+                showNotification('Logo actualizado exitosamente');
+            } catch (error) {
+                showNotification('Error al subir el logo: ' + error.message, 'error');
+            }
         });
     }
 }
@@ -470,7 +648,7 @@ function setupConfirmationEvents() {
     }
 }
 
-// Manejar subida de una sola imagen
+// Manejar subida de una sola imagen (vista previa local)
 function handleImageUpload(event, previewId) {
     const file = event.target.files[0];
     if (!file) return;
@@ -498,7 +676,7 @@ function handleImageUpload(event, previewId) {
     reader.readAsDataURL(file);
 }
 
-// Manejar subida de múltiples imágenes
+// Manejar subida de múltiples imágenes (vista previa local)
 function handleMultipleImageUpload(event) {
     const files = Array.from(event.target.files);
     if (!files || files.length === 0) return;
@@ -531,7 +709,8 @@ function handleMultipleImageUpload(event) {
             return function(e) {
                 productImages.push({
                     data: e.target.result,
-                    name: file.name
+                    name: file.name,
+                    file: file
                 });
                 renderProductImagesPreview();
                 updateImageCounter();
@@ -541,7 +720,7 @@ function handleMultipleImageUpload(event) {
     });
     
     if (validFiles > 0) {
-        showNotification(`${validFiles} imagen(es) cargada(s) correctamente`);
+        showNotification(`${validFiles} imagen(es) cargada(s) para vista previa`);
     }
 }
 
@@ -572,7 +751,7 @@ function renderProductImagesPreview() {
             productImages.splice(index, 1);
             renderProductImagesPreview();
             updateImageCounter();
-            showNotification('Imagen eliminada');
+            showNotification('Imagen eliminada de la vista previa');
         });
     });
 }
@@ -609,7 +788,7 @@ function populateStoreForm() {
 }
 
 // Guardar configuración de la tienda
-function saveStoreData() {
+async function saveStoreData() {
     const logoPreview = document.getElementById('logo-preview');
     const whatsappInput = document.getElementById('whatsapp-number');
     const locationInput = document.getElementById('store-location');
@@ -637,8 +816,12 @@ function saveStoreData() {
         about: aboutInput.value.trim()
     };
     
-    saveAllData();
-    showNotification('Configuración de la tienda guardada exitosamente');
+    try {
+        await saveStoreDataToFirebase();
+        showNotification('Configuración de la tienda guardada exitosamente en Firebase');
+    } catch (error) {
+        showNotification('Error al guardar configuración en Firebase: ' + error.message, 'error');
+    }
 }
 
 // Abrir modal para agregar/editar categoría
@@ -680,10 +863,11 @@ function openCategoryModal(categoryId = null) {
 }
 
 // Guardar categoría
-function saveCategory() {
+async function saveCategory() {
     const categoryNameInput = document.getElementById('category-name');
     const categoryImagePreview = document.getElementById('category-image-preview');
     const categoryIdInput = document.getElementById('category-id');
+    const categoryImageUpload = document.getElementById('category-image-upload');
     
     if (!categoryNameInput || !categoryImagePreview || !categoryIdInput) {
         showNotification('Error: No se encontraron todos los campos del formulario', 'error');
@@ -691,8 +875,8 @@ function saveCategory() {
     }
     
     const name = categoryNameInput.value.trim();
-    const image = categoryImagePreview.src;
-    const id = categoryIdInput.value;
+    let image = categoryImagePreview.src;
+    const id = categoryIdInput.value || generateId();
     
     // Validaciones
     if (!name) {
@@ -701,40 +885,52 @@ function saveCategory() {
         return;
     }
     
-    if (categoryImagePreview.src.includes('Vista previa')) {
+    // Subir nueva imagen si se seleccionó un archivo
+    if (categoryImageUpload.files.length > 0) {
+        try {
+            showNotification('Subiendo imagen a Firebase...', 'warning');
+            image = await uploadImageToFirebase(categoryImageUpload.files[0], 'category');
+        } catch (error) {
+            showNotification('Error al subir imagen a Firebase: ' + error.message, 'error');
+            return;
+        }
+    } else if (image.includes('Vista previa')) {
         showNotification('Por favor, sube una imagen para la categoría', 'error');
         return;
     }
     
-    if (id) {
-        // Editar categoría existente
-        const index = categories.findIndex(c => c.id == id);
-        if (index !== -1) {
-            categories[index].name = name;
-            categories[index].image = image;
+    const category = {
+        id: id,
+        name: name,
+        image: image
+    };
+    
+    try {
+        await saveCategoryToFirebase(category);
+        
+        // Actualizar lista local
+        if (categoryIdInput.value) {
+            // Editar
+            const index = categories.findIndex(c => c.id == id);
+            if (index !== -1) {
+                categories[index] = category;
+            }
+        } else {
+            // Agregar nuevo
+            categories.push(category);
         }
-    } else {
-        // Agregar nueva categoría
-        const newId = categories.length > 0 ? Math.max(...categories.map(c => c.id)) + 1 : 1;
-        categories.push({
-            id: newId,
-            name: name,
-            image: image
-        });
+        
+        // Actualizar tabla
+        renderCategoriesTable();
+        
+        // Cerrar modal y resetear
+        closeModal(categoryModal);
+        resetCategoryForm();
+        
+        showNotification(categoryIdInput.value ? 'Categoría actualizada exitosamente' : 'Categoría agregada exitosamente');
+    } catch (error) {
+        showNotification('Error al guardar categoría en Firebase: ' + error.message, 'error');
     }
-    
-    // Guardar en localStorage
-    saveAllData();
-    
-    // Actualizar tabla
-    renderCategoriesTable();
-    
-    // Cerrar modal y resetear
-    closeModal(categoryModal);
-    resetCategoryForm();
-    
-    // Mostrar notificación
-    showNotification(id ? 'Categoría actualizada exitosamente' : 'Categoría agregada exitosamente');
 }
 
 // Resetear formulario de categoría
@@ -783,7 +979,7 @@ function renderCategoriesTable() {
             <td><strong>${category.name}</strong></td>
             <td>
                 <div class="image-cell">
-                    <img src="${category.image}" alt="${category.name}">
+                    <img src="${category.image}" alt="${category.name}" style="max-width: 100px; max-height: 60px; border-radius: 4px;">
                 </div>
             </td>
             <td>
@@ -860,7 +1056,7 @@ function openProductModal(productId = null) {
             productDescriptionInput.value = product.description;
             productIdInput.value = product.id;
             
-            // Cargar imágenes existentes
+            // Cargar imágenes existentes (solo URLs, no archivos)
             if (product.images && Array.isArray(product.images)) {
                 product.images.forEach(image => {
                     productImages.push({
@@ -895,7 +1091,7 @@ function openProductModal(productId = null) {
 }
 
 // Guardar producto
-function saveProduct() {
+async function saveProduct() {
     const productNameInput = document.getElementById('product-name');
     const productCategorySelect = document.getElementById('product-category');
     const productPriceInput = document.getElementById('product-price');
@@ -913,7 +1109,7 @@ function saveProduct() {
     const price = parseFloat(productPriceInput.value);
     const originalPrice = productOriginalPriceInput.value ? parseFloat(productOriginalPriceInput.value) : null;
     const description = productDescriptionInput.value.trim();
-    const id = productIdInput.value;
+    const id = productIdInput.value || generateId();
     
     // Validaciones
     if (!name) {
@@ -951,46 +1147,86 @@ function saveProduct() {
         return;
     }
     
-    // Extraer solo los datos de las imágenes
-    const images = productImages.map(img => img.data);
+    // Subir imágenes a Firebase (solo las nuevas que son archivos)
+    const uploadedImages = [];
     
-    if (id) {
-        // Editar producto existente
-        const index = products.findIndex(p => p.id == id);
-        if (index !== -1) {
-            products[index].name = name;
-            products[index].category = category;
-            products[index].price = price;
-            products[index].originalPrice = originalPrice;
-            products[index].description = description;
-            products[index].images = images;
+    try {
+        showNotification('Subiendo imágenes a Firebase...', 'warning');
+        
+        for (let i = 0; i < productImages.length; i++) {
+            const img = productImages[i];
+            
+            // Si ya es una URL (imagen existente), mantenerla
+            if (img.data.startsWith('http')) {
+                uploadedImages.push(img.data);
+            } 
+            // Si es una data URL (imagen nueva en vista previa), subirla
+            else if (img.data.startsWith('data:')) {
+                if (img.file) {
+                    const imageUrl = await uploadImageToFirebase(img.file, 'product', id);
+                    uploadedImages.push(imageUrl);
+                } else {
+                    // Convertir data URL a blob y subir
+                    const blob = dataURLtoBlob(img.data);
+                    const file = new File([blob], `product_${id}_${i}.jpg`, { type: 'image/jpeg' });
+                    
+                    const imageUrl = await uploadImageToFirebase(file, 'product', id);
+                    uploadedImages.push(imageUrl);
+                }
+            }
         }
-    } else {
-        // Agregar nuevo producto
-        const newId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
-        products.push({
-            id: newId,
+        
+        const product = {
+            id: id,
             name: name,
             category: category,
             price: price,
             originalPrice: originalPrice,
             description: description,
-            images: images
-        });
+            images: uploadedImages
+        };
+        
+        await saveProductToFirebase(product);
+        
+        // Actualizar lista local
+        if (productIdInput.value) {
+            // Editar
+            const index = products.findIndex(p => p.id == id);
+            if (index !== -1) {
+                products[index] = product;
+            }
+        } else {
+            // Agregar nuevo
+            products.push(product);
+        }
+        
+        // Actualizar tabla
+        renderProductsTable();
+        
+        // Cerrar modal y resetear
+        closeModal(productModal);
+        resetProductForm();
+        
+        showNotification(productIdInput.value ? 'Producto actualizado exitosamente' : 'Producto agregado exitosamente');
+        
+    } catch (error) {
+        showNotification('Error al guardar producto en Firebase: ' + error.message, 'error');
+    }
+}
+
+// Convertir DataURL a Blob
+function dataURLtoBlob(dataURL) {
+    const arr = dataURL.split(',');
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    
+    while(n--) {
+        u8arr[n] = bstr.charCodeAt(n);
     }
     
-    // Guardar en localStorage
-    saveAllData();
-    
-    // Actualizar tabla
-    renderProductsTable();
-    
-    // Cerrar modal y resetear
-    closeModal(productModal);
-    resetProductForm();
-    
-    // Mostrar notificación
-    showNotification(id ? 'Producto actualizado exitosamente' : 'Producto agregado exitosamente');
+    return new Blob([u8arr], { type: mime });
 }
 
 // Resetear formulario de producto
@@ -1048,7 +1284,7 @@ function renderProductsTable() {
             </td>
             <td>
                 <div class="image-gallery-preview">
-                    <img src="${product.images[0]}" alt="${product.name}">
+                    <img src="${product.images[0]}" alt="${product.name}" style="max-width: 80px; max-height: 60px; border-radius: 4px;">
                     ${product.images.length > 1 ? `<span class="image-count">+${product.images.length - 1}</span>` : ''}
                 </div>
             </td>
@@ -1124,7 +1360,7 @@ function openPromotionModal(promotionId = null) {
 }
 
 // Guardar promoción
-function savePromotion() {
+async function savePromotion() {
     const promotionTitleInput = document.getElementById('promotion-title');
     const promotionDescriptionInput = document.getElementById('promotion-description');
     const promotionActiveInput = document.getElementById('promotion-active');
@@ -1138,7 +1374,7 @@ function savePromotion() {
     const title = promotionTitleInput.value.trim();
     const description = promotionDescriptionInput.value.trim();
     const active = promotionActiveInput.checked;
-    const id = promotionIdInput.value;
+    const id = promotionIdInput.value || generateId();
     
     // Validaciones
     if (!title) {
@@ -1153,37 +1389,39 @@ function savePromotion() {
         return;
     }
     
-    if (id) {
-        // Editar promoción existente
-        const index = promotions.findIndex(p => p.id == id);
-        if (index !== -1) {
-            promotions[index].title = title;
-            promotions[index].description = description;
-            promotions[index].active = active;
+    const promotion = {
+        id: id,
+        title: title,
+        description: description,
+        active: active
+    };
+    
+    try {
+        await savePromotionToFirebase(promotion);
+        
+        // Actualizar lista local
+        if (promotionIdInput.value) {
+            // Editar
+            const index = promotions.findIndex(p => p.id == id);
+            if (index !== -1) {
+                promotions[index] = promotion;
+            }
+        } else {
+            // Agregar nuevo
+            promotions.push(promotion);
         }
-    } else {
-        // Agregar nueva promoción
-        const newId = promotions.length > 0 ? Math.max(...promotions.map(p => p.id)) + 1 : 1;
-        promotions.push({
-            id: newId,
-            title: title,
-            description: description,
-            active: active
-        });
+        
+        // Actualizar vista
+        renderPromotions();
+        
+        // Cerrar modal
+        closeModal(promotionModal);
+        resetPromotionForm();
+        
+        showNotification(promotionIdInput.value ? 'Promoción actualizada exitosamente' : 'Promoción agregada exitosamente');
+    } catch (error) {
+        showNotification('Error al guardar promoción en Firebase: ' + error.message, 'error');
     }
-    
-    // Guardar en localStorage
-    saveAllData();
-    
-    // Actualizar vista
-    renderPromotions();
-    
-    // Cerrar modal
-    closeModal(promotionModal);
-    resetPromotionForm();
-    
-    // Mostrar notificación
-    showNotification(id ? 'Promoción actualizada exitosamente' : 'Promoción agregada exitosamente');
 }
 
 // Resetear formulario de promoción
@@ -1294,11 +1532,12 @@ function openSlideModal(slideId = null) {
 }
 
 // Guardar slide
-function saveSlide() {
+async function saveSlide() {
     const slideTitleInput = document.getElementById('slide-title');
     const slideDescriptionInput = document.getElementById('slide-description');
     const slideImagePreview = document.getElementById('slide-image-preview');
     const slideIdInput = document.getElementById('slide-id');
+    const slideImageUpload = document.getElementById('slide-image-upload');
     
     if (!slideTitleInput || !slideDescriptionInput || !slideImagePreview || !slideIdInput) {
         showNotification('Error: No se encontraron todos los campos del formulario', 'error');
@@ -1307,8 +1546,8 @@ function saveSlide() {
     
     const title = slideTitleInput.value.trim();
     const description = slideDescriptionInput.value.trim();
-    const image = slideImagePreview.src;
-    const id = slideIdInput.value;
+    let image = slideImagePreview.src;
+    const id = slideIdInput.value || generateId();
     
     // Validaciones
     if (!title) {
@@ -1323,42 +1562,53 @@ function saveSlide() {
         return;
     }
     
-    if (slideImagePreview.src.includes('Vista previa')) {
+    // Subir nueva imagen si se seleccionó un archivo
+    if (slideImageUpload.files.length > 0) {
+        try {
+            showNotification('Subiendo imagen a Firebase...', 'warning');
+            image = await uploadImageToFirebase(slideImageUpload.files[0], 'slide');
+        } catch (error) {
+            showNotification('Error al subir imagen a Firebase: ' + error.message, 'error');
+            return;
+        }
+    } else if (image.includes('Vista previa')) {
         showNotification('Por favor, sube una imagen para el slide', 'error');
         return;
     }
     
-    if (id) {
-        // Editar slide existente
-        const index = heroSlides.findIndex(s => s.id == id);
-        if (index !== -1) {
-            heroSlides[index].title = title;
-            heroSlides[index].description = description;
-            heroSlides[index].image = image;
+    const slide = {
+        id: id,
+        title: title,
+        description: description,
+        image: image
+    };
+    
+    try {
+        await saveSlideToFirebase(slide);
+        
+        // Actualizar lista local
+        if (slideIdInput.value) {
+            // Editar
+            const index = heroSlides.findIndex(s => s.id == id);
+            if (index !== -1) {
+                heroSlides[index] = slide;
+            }
+        } else {
+            // Agregar nuevo
+            heroSlides.push(slide);
         }
-    } else {
-        // Agregar nuevo slide
-        const newId = heroSlides.length > 0 ? Math.max(...heroSlides.map(s => s.id)) + 1 : 1;
-        heroSlides.push({
-            id: newId,
-            title: title,
-            description: description,
-            image: image
-        });
+        
+        // Actualizar vista
+        renderSlides();
+        
+        // Cerrar modal y resetear
+        closeModal(slideModal);
+        resetSlideForm();
+        
+        showNotification(slideIdInput.value ? 'Slide actualizado exitosamente' : 'Slide agregado exitosamente');
+    } catch (error) {
+        showNotification('Error al guardar slide en Firebase: ' + error.message, 'error');
     }
-    
-    // Guardar en localStorage
-    saveAllData();
-    
-    // Actualizar vista
-    renderSlides();
-    
-    // Cerrar modal y resetear
-    closeModal(slideModal);
-    resetSlideForm();
-    
-    // Mostrar notificación
-    showNotification(id ? 'Slide actualizado exitosamente' : 'Slide agregado exitosamente');
 }
 
 // Resetear formulario de slide
@@ -1391,7 +1641,7 @@ function renderSlides() {
         card.className = 'slide-card';
         card.innerHTML = `
             <div class="slide-card-image">
-                <img src="${slide.image}" alt="${slide.title}">
+                <img src="${slide.image}" alt="${slide.title}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px;">
             </div>
             <div class="slide-card-content">
                 <h3>${slide.title}</h3>
@@ -1532,7 +1782,7 @@ function showDeleteConfirmation(itemId, itemType) {
 }
 
 // Ejecutar eliminación
-function executeDelete() {
+async function executeDelete() {
     const itemId = parseInt(document.getElementById('confirm-item-id').value);
     const itemType = document.getElementById('confirm-item-type').value;
     
@@ -1541,67 +1791,55 @@ function executeDelete() {
         return;
     }
     
-    switch (itemType) {
-        case 'category':
-            deleteCategory(itemId);
-            break;
-            
-        case 'product':
-            deleteProduct(itemId);
-            break;
-            
-        case 'promotion':
-            deletePromotion(itemId);
-            break;
-            
-        case 'slide':
-            deleteSlide(itemId);
-            break;
+    try {
+        switch (itemType) {
+            case 'category':
+                await deleteCategoryFromFirebase(itemId);
+                // Eliminar localmente
+                categories = categories.filter(c => c.id !== itemId);
+                // Actualizar productos que tenían esta categoría
+                products.forEach(product => {
+                    if (product.categoryId == itemId) {
+                        product.category = "Sin categoría";
+                        // Actualizar en Firebase también
+                        db.saveProduct(product.id, product);
+                    }
+                });
+                renderCategoriesTable();
+                renderProductsTable();
+                showNotification('Categoría eliminada exitosamente de Firebase');
+                break;
+                
+            case 'product':
+                await deleteProductFromFirebase(itemId);
+                // Eliminar localmente
+                products = products.filter(p => p.id !== itemId);
+                renderProductsTable();
+                showNotification('Producto eliminado exitosamente de Firebase');
+                break;
+                
+            case 'promotion':
+                await deletePromotionFromFirebase(itemId);
+                // Eliminar localmente
+                promotions = promotions.filter(p => p.id !== itemId);
+                renderPromotions();
+                showNotification('Promoción eliminada exitosamente de Firebase');
+                break;
+                
+            case 'slide':
+                await deleteSlideFromFirebase(itemId);
+                // Eliminar localmente
+                heroSlides = heroSlides.filter(s => s.id !== itemId);
+                renderSlides();
+                showNotification('Slide eliminado exitosamente de Firebase');
+                break;
+        }
+    } catch (error) {
+        console.error("Error eliminando:", error);
+        showNotification('Error al eliminar de Firebase: ' + error.message, 'error');
     }
     
     closeModal(confirmModal);
-}
-
-// Eliminar categoría
-function deleteCategory(categoryId) {
-    // Eliminar la categoría
-    categories = categories.filter(c => c.id !== categoryId);
-    
-    // Actualizar productos que tenían esta categoría
-    products.forEach(product => {
-        if (product.categoryId == categoryId) {
-            product.category = "Sin categoría";
-        }
-    });
-    
-    saveAllData();
-    renderCategoriesTable();
-    renderProductsTable();
-    showNotification('Categoría eliminada exitosamente');
-}
-
-// Eliminar producto
-function deleteProduct(productId) {
-    products = products.filter(p => p.id !== productId);
-    saveAllData();
-    renderProductsTable();
-    showNotification('Producto eliminado exitosamente');
-}
-
-// Eliminar promoción
-function deletePromotion(promotionId) {
-    promotions = promotions.filter(p => p.id !== promotionId);
-    saveAllData();
-    renderPromotions();
-    showNotification('Promoción eliminada exitosamente');
-}
-
-// Eliminar slide
-function deleteSlide(slideId) {
-    heroSlides = heroSlides.filter(s => s.id !== slideId);
-    saveAllData();
-    renderSlides();
-    showNotification('Slide eliminado exitosamente');
 }
 
 // Abrir modal
@@ -1651,22 +1889,27 @@ function showNotification(message, type = 'success') {
     }, 4000);
 }
 
+// Generar ID único
+function generateId() {
+    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+}
+
 // Cargar datos de ejemplo si no hay datos
-function loadSampleDataIfEmpty() {
+async function loadSampleDataIfEmpty() {
     if (categories.length === 0) {
         categories = [
             { 
-                id: 1, 
+                id: generateId(), 
                 name: "Ropa Deportiva", 
                 image: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" 
             },
             { 
-                id: 2, 
+                id: generateId(), 
                 name: "Zapatillas", 
                 image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" 
             },
             { 
-                id: 3, 
+                id: generateId(), 
                 name: "Accesorios", 
                 image: "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" 
             }
@@ -1676,7 +1919,7 @@ function loadSampleDataIfEmpty() {
     if (products.length === 0) {
         products = [
             { 
-                id: 1, 
+                id: generateId(), 
                 name: "Camiseta Deportiva Elite", 
                 category: "Ropa Deportiva", 
                 price: 29.99, 
@@ -1688,7 +1931,7 @@ function loadSampleDataIfEmpty() {
                 ]
             },
             { 
-                id: 2, 
+                id: generateId(), 
                 name: "Zapatillas Running Pro", 
                 category: "Zapatillas", 
                 price: 89.99, 
@@ -1705,13 +1948,13 @@ function loadSampleDataIfEmpty() {
     if (heroSlides.length === 0) {
         heroSlides = [
             { 
-                id: 1,
+                id: generateId(),
                 title: "Ropa Deportiva de Alta Calidad", 
                 description: "Equípate con lo mejor para tus entrenamientos",
                 image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" 
             },
             { 
-                id: 2,
+                id: generateId(),
                 title: "Nueva Colección Verano 2023", 
                 description: "Descubre las últimas tendencias en ropa deportiva",
                 image: "https://images.unsplash.com/photo-1578763363227-a6c00da1c8a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" 
@@ -1719,10 +1962,24 @@ function loadSampleDataIfEmpty() {
         ];
     }
     
-    saveAllData();
-}
-
-// Si no hay datos, cargar datos de ejemplo
-if (categories.length === 0 && products.length === 0) {
-    loadSampleDataIfEmpty();
+    // Guardar datos de ejemplo en Firebase
+    try {
+        await saveStoreDataToFirebase();
+        
+        for (const category of categories) {
+            await saveCategoryToFirebase(category);
+        }
+        
+        for (const product of products) {
+            await saveProductToFirebase(product);
+        }
+        
+        for (const slide of heroSlides) {
+            await saveSlideToFirebase(slide);
+        }
+        
+        console.log("Datos de ejemplo guardados en Firebase");
+    } catch (error) {
+        console.error("Error guardando datos de ejemplo:", error);
+    }
 }

@@ -1,4 +1,7 @@
-// Datos iniciales de la tienda
+// script-firebase.js
+// Tienda principal con Firebase
+
+// Datos iniciales
 let storeData = {
     logo: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='80' viewBox='0 0 150 80'%3E%3Crect width='150' height='80' fill='%23C5A451'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial, sans-serif' font-size='14' font-weight='bold' fill='%23000' text-anchor='middle' dy='.3em'%3ECOQUETTE SPORT%3C/text%3E%3C/svg%3E",
     whatsapp: "+1234567890",
@@ -7,108 +10,12 @@ let storeData = {
     about: "Somos una tienda especializada en ropa deportiva de alta calidad, comprometidos con tu rendimiento y comodidad. Ofrecemos productos diseñados para atletas profesionales y entusiastas del fitness."
 };
 
-// Datos iniciales de categorías
-let categories = [
-    { id: 1, name: "Ropa Deportiva", image: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" },
-    { id: 2, name: "Zapatillas", image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" },
-    { id: 3, name: "Accesorios", image: "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" },
-    { id: 4, name: "Equipamiento", image: "https://images.unsplash.com/photo-1536922246289-88c42f957773?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" }
-];
-
-// Datos iniciales de productos
-let products = [
-    { 
-        id: 1, 
-        name: "Camiseta Deportiva Elite", 
-        category: "Ropa Deportiva", 
-        price: 29.99, 
-        originalPrice: 39.99,
-        description: "Camiseta de alta calidad para entrenamientos intensos. Material transpirable y ligero.",
-        images: [
-            "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-            "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-        ]
-    },
-    { 
-        id: 2, 
-        name: "Zapatillas Running Pro", 
-        category: "Zapatillas", 
-        price: 89.99, 
-        originalPrice: 99.99,
-        description: "Zapatillas diseñadas para corredores de alto rendimiento. Amortiguación superior y máxima comodidad.",
-        images: [
-            "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-            "https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-        ]
-    },
-    { 
-        id: 3, 
-        name: "Short Deportivo Premium", 
-        category: "Ropa Deportiva", 
-        price: 24.99, 
-        originalPrice: 34.99,
-        description: "Short ligero y cómodo para cualquier actividad deportiva. Secado rápido y tejido elástico.",
-        images: [
-            "https://images.unsplash.com/photo-1591195853828-11db59a44f6b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-            "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-        ]
-    },
-    { 
-        id: 4, 
-        name: "Mochila Deportiva", 
-        category: "Accesorios", 
-        price: 45.99, 
-        originalPrice: 59.99,
-        description: "Mochila espaciosa con compartimentos especializados para equipo deportivo. Impermeable y resistente.",
-        images: [
-            "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-            "https://images.unsplash.com/photo-1581605405669-fcdf81165afa?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-        ]
-    },
-    { 
-        id: 5, 
-        name: "Pesas Ajustables", 
-        category: "Equipamiento", 
-        price: 79.99, 
-        originalPrice: 99.99,
-        description: "Set de pesas ajustables para entrenamiento en casa. Rango de 2.5kg a 20kg por pesa.",
-        images: [
-            "https://images.unsplash.com/photo-1534367507877-0edd93bd013b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-            "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-        ]
-    },
-    { 
-        id: 6, 
-        name: "Gorra Deportiva", 
-        category: "Accesorios", 
-        price: 19.99, 
-        originalPrice: 24.99,
-        description: "Gorra ligera y transpirable para protegerte del sol durante tus actividades deportivas.",
-        images: [
-            "https://images.unsplash.com/photo-1521369909029-2afed882baee?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-            "https://images.unsplash.com/photo-1514327602138-bc0c2a5e34c9?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-        ]
-    }
-];
+let categories = [];
+let products = [];
+let heroSlides = [];
 
 // Carrito de compras
 let cart = [];
-
-// Sliders de hero
-let heroSlides = [
-    { 
-        id: 1,
-        title: "Ropa Deportiva de Alta Calidad", 
-        description: "Equípate con lo mejor para tus entrenamientos",
-        image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" 
-    },
-    { 
-        id: 2,
-        title: "Nueva Colección Verano 2023", 
-        description: "Descubre las últimas tendencias en ropa deportiva",
-        image: "https://images.unsplash.com/photo-1578763363227-a6c00da1c8a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" 
-    }
-];
 
 // DOM Elements
 let sidebar, overlay, menuToggle, closeSidebar, cartSidebar, cartBtn, closeCart;
@@ -116,8 +23,15 @@ let cartItems, cartTotal, cartCount, checkoutBtn, productModal, closeProductModa
 let searchInput, searchButton;
 
 // Inicializar la aplicación
-document.addEventListener('DOMContentLoaded', function() {
-    console.log("DOM cargado, inicializando aplicación...");
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log("DOM cargado, inicializando aplicación con Firebase...");
+    
+    // Verificar si Firebase está cargado
+    if (typeof firebase === 'undefined') {
+        console.error("Firebase no está cargado. Asegúrate de incluir firebase-config.js");
+        showNotification('Error: Firebase no está configurado', 'error');
+        return;
+    }
     
     // Inicializar referencias a elementos del DOM
     initializeDOMElements();
@@ -125,8 +39,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Configurar acceso invisible al admin
     setupAdminAccess();
     
-    // Cargar datos del localStorage si existen
-    loadFromLocalStorage();
+    // Cargar datos de Firebase
+    await loadDataFromFirebase();
+    
+    // Cargar carrito del localStorage
+    loadCartFromLocalStorage();
     
     // Renderizar datos iniciales
     renderStoreData();
@@ -140,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Actualizar carrito
     updateCart();
     
-    console.log("Aplicación inicializada correctamente");
+    console.log("Aplicación con Firebase inicializada correctamente");
 });
 
 // Configurar acceso invisible al admin
@@ -213,50 +130,176 @@ function initializeDOMElements() {
     });
 }
 
-// Cargar datos del localStorage
-function loadFromLocalStorage() {
+// Cargar datos desde Firebase
+async function loadDataFromFirebase() {
     try {
-        const savedStoreData = localStorage.getItem('coquetteSportStoreData');
-        const savedCategories = localStorage.getItem('coquetteSportCategories');
-        const savedProducts = localStorage.getItem('coquetteSportProducts');
-        const savedHeroSlides = localStorage.getItem('coquetteSportHeroSlides');
-        const savedCart = localStorage.getItem('coquetteSportCart');
+        console.log("Cargando datos desde Firebase...");
         
-        if (savedStoreData) {
-            storeData = JSON.parse(savedStoreData);
-            console.log("Datos de tienda cargados desde localStorage");
+        // Cargar datos de la tienda
+        const storeSnapshot = await db.getStoreData();
+        if (storeSnapshot.exists()) {
+            storeData = storeSnapshot.val();
+            console.log("Datos de tienda cargados desde Firebase");
         }
-        if (savedCategories) {
-            categories = JSON.parse(savedCategories);
-            console.log("Categorías cargadas desde localStorage:", categories.length);
+        
+        // Cargar categorías
+        const categoriesSnapshot = await db.getCategories();
+        if (categoriesSnapshot.exists()) {
+            const cats = categoriesSnapshot.val();
+            categories = cats ? Object.values(cats) : [];
+            console.log("Categorías cargadas desde Firebase:", categories.length);
         }
-        if (savedProducts) {
-            products = JSON.parse(savedProducts);
-            console.log("Productos cargados desde localStorage:", products.length);
+        
+        // Cargar productos
+        const productsSnapshot = await db.getProducts();
+        if (productsSnapshot.exists()) {
+            const prods = productsSnapshot.val();
+            products = prods ? Object.values(prods) : [];
+            console.log("Productos cargados desde Firebase:", products.length);
         }
-        if (savedHeroSlides) {
-            heroSlides = JSON.parse(savedHeroSlides);
-            console.log("Slides cargados desde localStorage:", heroSlides.length);
+        
+        // Cargar slides
+        const slidesSnapshot = await db.getSlides();
+        if (slidesSnapshot.exists()) {
+            const sls = slidesSnapshot.val();
+            heroSlides = sls ? Object.values(sls) : [];
+            console.log("Slides cargados desde Firebase:", heroSlides.length);
         }
+        
+        // Si no hay datos, cargar datos por defecto
+        if (categories.length === 0 && products.length === 0) {
+            console.log("No hay datos en Firebase, cargando datos por defecto...");
+            loadDefaultData();
+        }
+        
+    } catch (error) {
+        console.error("Error cargando datos desde Firebase:", error);
+        showNotification('Error al cargar datos desde Firebase', 'error');
+        
+        // Cargar datos por defecto en caso de error
+        loadDefaultData();
+    }
+}
+
+// Cargar datos por defecto
+function loadDefaultData() {
+    categories = [
+        { id: 1, name: "Ropa Deportiva", image: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" },
+        { id: 2, name: "Zapatillas", image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" },
+        { id: 3, name: "Accesorios", image: "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" },
+        { id: 4, name: "Equipamiento", image: "https://images.unsplash.com/photo-1536922246289-88c42f957773?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" }
+    ];
+    
+    products = [
+        { 
+            id: 1, 
+            name: "Camiseta Deportiva Elite", 
+            category: "Ropa Deportiva", 
+            price: 29.99, 
+            originalPrice: 39.99,
+            description: "Camiseta de alta calidad para entrenamientos intensos. Material transpirable y ligero.",
+            images: [
+                "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+                "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+            ]
+        },
+        { 
+            id: 2, 
+            name: "Zapatillas Running Pro", 
+            category: "Zapatillas", 
+            price: 89.99, 
+            originalPrice: 99.99,
+            description: "Zapatillas diseñadas para corredores de alto rendimiento. Amortiguación superior y máxima comodidad.",
+            images: [
+                "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+                "https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+            ]
+        },
+        { 
+            id: 3, 
+            name: "Short Deportivo Premium", 
+            category: "Ropa Deportiva", 
+            price: 24.99, 
+            originalPrice: 34.99,
+            description: "Short ligero y cómodo para cualquier actividad deportiva. Secado rápido y tejido elástico.",
+            images: [
+                "https://images.unsplash.com/photo-1591195853828-11db59a44f6b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+                "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+            ]
+        },
+        { 
+            id: 4, 
+            name: "Mochila Deportiva", 
+            category: "Accesorios", 
+            price: 45.99, 
+            originalPrice: 59.99,
+            description: "Mochila espaciosa con compartimentos especializados para equipo deportivo. Impermeable y resistente.",
+            images: [
+                "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+                "https://images.unsplash.com/photo-1581605405669-fcdf81165afa?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+            ]
+        },
+        { 
+            id: 5, 
+            name: "Pesas Ajustables", 
+            category: "Equipamiento", 
+            price: 79.99, 
+            originalPrice: 99.99,
+            description: "Set de pesas ajustables para entrenamiento en casa. Rango de 2.5kg a 20kg por pesa.",
+            images: [
+                "https://images.unsplash.com/photo-1534367507877-0edd93bd013b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+                "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+            ]
+        },
+        { 
+            id: 6, 
+            name: "Gorra Deportiva", 
+            category: "Accesorios", 
+            price: 19.99, 
+            originalPrice: 24.99,
+            description: "Gorra ligera y transpirable para protegerte del sol durante tus actividades deportivas.",
+            images: [
+                "https://images.unsplash.com/photo-1521369909029-2afed882baee?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+                "https://images.unsplash.com/photo-1514327602138-bc0c2a5e34c9?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+            ]
+        }
+    ];
+    
+    heroSlides = [
+        { 
+            id: 1,
+            title: "Ropa Deportiva de Alta Calidad", 
+            description: "Equípate con lo mejor para tus entrenamientos",
+            image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" 
+        },
+        { 
+            id: 2,
+            title: "Nueva Colección Verano 2023", 
+            description: "Descubre las últimas tendencias en ropa deportiva",
+            image: "https://images.unsplash.com/photo-1578763363227-a6c00da1c8a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" 
+        }
+    ];
+}
+
+// Cargar carrito desde localStorage
+function loadCartFromLocalStorage() {
+    try {
+        const savedCart = localStorage.getItem('coquetteSportCart');
         if (savedCart) {
             cart = JSON.parse(savedCart);
             console.log("Carrito cargado desde localStorage:", cart.length);
         }
     } catch (error) {
-        console.log("No hay datos guardados o error al cargar:", error);
+        console.log("No hay carrito guardado o error al cargar:", error);
     }
 }
 
-// Guardar datos en localStorage
-function saveToLocalStorage() {
+// Guardar carrito en localStorage
+function saveCartToLocalStorage() {
     try {
-        localStorage.setItem('coquetteSportStoreData', JSON.stringify(storeData));
-        localStorage.setItem('coquetteSportCategories', JSON.stringify(categories));
-        localStorage.setItem('coquetteSportProducts', JSON.stringify(products));
-        localStorage.setItem('coquetteSportHeroSlides', JSON.stringify(heroSlides));
         localStorage.setItem('coquetteSportCart', JSON.stringify(cart));
     } catch (error) {
-        console.error("Error guardando datos en localStorage:", error);
+        console.error("Error guardando carrito en localStorage:", error);
     }
 }
 
@@ -549,7 +592,7 @@ function addToCart(productId, quantity = 1) {
     }
     
     updateCart();
-    saveToLocalStorage();
+    saveCartToLocalStorage();
     
     // Mostrar notificación
     showNotification(`"${product.name}" agregado al carrito`);
@@ -624,7 +667,7 @@ function updateCartItemQuantity(productId, change) {
         removeFromCart(productId);
     } else {
         updateCart();
-        saveToLocalStorage();
+        saveCartToLocalStorage();
     }
 }
 
@@ -634,7 +677,7 @@ function removeFromCart(productId) {
     
     cart = cart.filter(item => item.id !== productId);
     updateCart();
-    saveToLocalStorage();
+    saveCartToLocalStorage();
     
     // Actualizar botones de agregar al carrito
     const productButton = document.querySelector(`.add-to-cart[data-id="${productId}"]`);
@@ -672,7 +715,7 @@ function completeOrder() {
     // Vaciar carrito después de enviar
     cart = [];
     updateCart();
-    saveToLocalStorage();
+    saveCartToLocalStorage();
     
     // Cerrar carrito
     if (cartSidebar) cartSidebar.classList.remove('open');
