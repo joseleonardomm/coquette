@@ -1,4 +1,4 @@
-// script-firebase.js
+// script-firebase.js - CORREGIDO PARA MÓVILES
 // Tienda principal con Firebase Realtime Database
 
 // Datos iniciales
@@ -26,8 +26,11 @@ let searchInput, searchButton;
 document.addEventListener('DOMContentLoaded', async function() {
     console.log("DOM cargado, inicializando aplicación con Firebase...");
     
+    // Inicializar referencias a elementos del DOM
+    initializeDOMElements();
+    
     // Inicializar Firebase
-    const firebaseInitialized = initializeFirebase();
+    const firebaseInitialized = await initializeFirebase();
     
     if (!firebaseInitialized) {
         console.error("No se pudo inicializar Firebase. Cargando datos por defecto...");
@@ -40,9 +43,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         updateCart();
         return;
     }
-    
-    // Inicializar referencias a elementos del DOM
-    initializeDOMElements();
     
     // Configurar acceso invisible al admin
     setupAdminAccess();
@@ -66,17 +66,22 @@ document.addEventListener('DOMContentLoaded', async function() {
     updateCart();
     
     console.log("Aplicación con Firebase inicializada correctamente");
+    
+    // Verificar conexión a Firebase
+    checkFirebaseConnection();
 });
 
-// Inicializar Firebase
-function initializeFirebase() {
+// Inicializar Firebase con mejor manejo de errores
+async function initializeFirebase() {
     try {
         console.log("Inicializando Firebase...");
         
         // Verificar si Firebase está cargado
         if (typeof firebase === 'undefined') {
             console.error("Firebase SDK no está cargado");
-            return false;
+            
+            // Cargar Firebase dinámicamente si no está cargado
+            await loadFirebaseSDK();
         }
         
         // Configuración de Firebase
@@ -91,7 +96,7 @@ function initializeFirebase() {
         };
         
         // Inicializar Firebase solo si no está inicializado
-        if (!firebase.apps.length) {
+        if (!firebase.apps || firebase.apps.length === 0) {
             firebase.initializeApp(firebaseConfig);
             console.log("Firebase inicializado correctamente");
         } else {
@@ -104,6 +109,48 @@ function initializeFirebase() {
         console.error("Error inicializando Firebase:", error);
         return false;
     }
+}
+
+// Cargar Firebase SDK dinámicamente
+async function loadFirebaseSDK() {
+    return new Promise((resolve, reject) => {
+        // Verificar si ya está cargado
+        if (typeof firebase !== 'undefined') {
+            resolve();
+            return;
+        }
+        
+        // Cargar Firebase SDK
+        const script = document.createElement('script');
+        script.src = 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
+        script.async = true;
+        
+        script.onload = () => {
+            // Cargar módulos adicionales necesarios
+            const databaseScript = document.createElement('script');
+            databaseScript.src = 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js';
+            databaseScript.async = true;
+            
+            databaseScript.onload = () => {
+                console.log("Firebase SDK cargado dinámicamente");
+                resolve();
+            };
+            
+            databaseScript.onerror = () => {
+                console.error("Error cargando Firebase Database SDK");
+                reject();
+            };
+            
+            document.head.appendChild(databaseScript);
+        };
+        
+        script.onerror = () => {
+            console.error("Error cargando Firebase SDK");
+            reject();
+        };
+        
+        document.head.appendChild(script);
+    });
 }
 
 // Configurar acceso invisible al admin
@@ -187,7 +234,7 @@ async function loadDataFromFirebase() {
         const firebaseObjectToArray = (obj) => {
             if (!obj) return [];
             return Object.keys(obj).map(key => ({
-                id: obj[key].id || key, // Usar id del objeto o la clave de Firebase
+                id: key, // Usar la clave de Firebase como ID
                 ...obj[key]
             }));
         };
@@ -215,7 +262,7 @@ async function loadDataFromFirebase() {
             ...product,
             price: parseFloat(product.price) || 0,
             originalPrice: product.originalPrice ? parseFloat(product.originalPrice) : null,
-            images: Array.isArray(product.images) ? product.images : [],
+            images: Array.isArray(product.images) ? product.images : [product.image || ''],
             description: product.description || '',
             category: product.category || ''
         }));
@@ -246,15 +293,15 @@ async function loadDataFromFirebase() {
 // Cargar datos por defecto
 function loadDefaultData() {
     categories = [
-        { id: 1, name: "Ropa Deportiva", image: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" },
-        { id: 2, name: "Zapatillas", image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" },
-        { id: 3, name: "Accesorios", image: "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" },
-        { id: 4, name: "Equipamiento", image: "https://images.unsplash.com/photo-1536922246289-88c42f957773?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" }
+        { id: 'cat1', name: "Ropa Deportiva", image: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" },
+        { id: 'cat2', name: "Zapatillas", image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" },
+        { id: 'cat3', name: "Accesorios", image: "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" },
+        { id: 'cat4', name: "Equipamiento", image: "https://images.unsplash.com/photo-1536922246289-88c42f957773?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" }
     ];
     
     products = [
         { 
-            id: 1, 
+            id: 'prod1', 
             name: "Camiseta Deportiva Elite", 
             category: "Ropa Deportiva", 
             price: 29.99, 
@@ -266,7 +313,7 @@ function loadDefaultData() {
             ]
         },
         { 
-            id: 2, 
+            id: 'prod2', 
             name: "Zapatillas Running Pro", 
             category: "Zapatillas", 
             price: 89.99, 
@@ -276,69 +323,15 @@ function loadDefaultData() {
                 "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
                 "https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
             ]
-        },
-        { 
-            id: 3, 
-            name: "Short Deportivo Premium", 
-            category: "Ropa Deportiva", 
-            price: 24.99, 
-            originalPrice: 34.99,
-            description: "Short ligero y cómodo para cualquier actividad deportiva. Secado rápido y tejido elástico.",
-            images: [
-                "https://images.unsplash.com/photo-1591195853828-11db59a44f6b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-                "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-            ]
-        },
-        { 
-            id: 4, 
-            name: "Mochila Deportiva", 
-            category: "Accesorios", 
-            price: 45.99, 
-            originalPrice: 59.99,
-            description: "Mochila espaciosa con compartimentos especializados para equipo deportivo. Impermeable y resistente.",
-            images: [
-                "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-                "https://images.unsplash.com/photo-1581605405669-fcdf81165afa?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-            ]
-        },
-        { 
-            id: 5, 
-            name: "Pesas Ajustables", 
-            category: "Equipamiento", 
-            price: 79.99, 
-            originalPrice: 99.99,
-            description: "Set de pesas ajustables para entrenamiento en casa. Rango de 2.5kg a 20kg por pesa.",
-            images: [
-                "https://images.unsplash.com/photo-1534367507877-0edd93bd013b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-                "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-            ]
-        },
-        { 
-            id: 6, 
-            name: "Gorra Deportiva", 
-            category: "Accesorios", 
-            price: 19.99, 
-            originalPrice: 24.99,
-            description: "Gorra ligera y transpirable para protegerte del sol durante tus actividades deportivas.",
-            images: [
-                "https://images.unsplash.com/photo-1521369909029-2afed882baee?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-                "https://images.unsplash.com/photo-1514327602138-bc0c2a5e34c9?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-            ]
         }
     ];
     
     heroSlides = [
         { 
-            id: 1,
+            id: 'slide1',
             title: "Ropa Deportiva de Alta Calidad", 
             description: "Equípate con lo mejor para tus entrenamientos",
             image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" 
-        },
-        { 
-            id: 2,
-            title: "Nueva Colección Verano 2023", 
-            description: "Descubre las últimas tendencias en ropa deportiva",
-            image: "https://images.unsplash.com/photo-1578763363227-a6c00da1c8a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" 
         }
     ];
 }
@@ -353,6 +346,7 @@ function loadCartFromLocalStorage() {
         }
     } catch (error) {
         console.log("No hay carrito guardado o error al cargar:", error);
+        cart = [];
     }
 }
 
@@ -425,9 +419,15 @@ function renderCategories() {
         const categoryCard = document.createElement('div');
         categoryCard.className = 'category-card';
         categoryCard.setAttribute('data-category', category.id);
+        
+        // Imagen con lazy loading para móviles
+        const imageHTML = category.image ? 
+            `<img src="${category.image}" alt="${category.name}" loading="lazy" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22300%22%3E%3Crect width=%22600%22 height=%22300%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%22300%22 y=%22150%22 font-family=%22Arial%22 font-size=%2218%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 fill=%22%23666%22%3E${category.name}%3C/text%3E%3C/svg%3E'">` :
+            `<div class="placeholder-image">${category.name}</div>`;
+        
         categoryCard.innerHTML = `
             <div class="category-image">
-                <img src="${category.image}" alt="${category.name}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22300%22%3E%3Crect width=%22600%22 height=%22300%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%22300%22 y=%22150%22 font-family=%22Arial%22 font-size=%2218%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 fill=%22%23666%22%3E${category.name}%3C/text%3E%3C/svg%3E'">
+                ${imageHTML}
             </div>
             <h3>${category.name}</h3>
         `;
@@ -458,9 +458,10 @@ function renderProducts(filter = 'all') {
     let filteredProducts = products;
     
     if (filter !== 'all') {
-        const category = categories.find(c => c.id == filter);
+        // Buscar categoría por ID
+        const category = categories.find(c => c.id === filter || c.id == filter);
         if (category) {
-            filteredProducts = products.filter(product => product.category === category.name);
+            filteredProducts = products.filter(product => product.category === category.name || product.category === category.id);
         }
     }
     
@@ -481,11 +482,16 @@ function renderProducts(filter = 'all') {
         productCard.setAttribute('data-id', product.id);
         
         // Verificar si el producto está en el carrito
-        const inCart = cart.some(item => item.id == product.id);
+        const inCart = cart.some(item => item.id === product.id);
+        
+        // Primera imagen o placeholder
+        const firstImage = product.images && product.images.length > 0 ? product.images[0] : 
+            product.image || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22600%22%3E%3Crect width=%22600%22 height=%22600%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%22300%22 y=%22300%22 font-family=%22Arial%22 font-size=%2218%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 fill=%22%23666%22%3E${product.name}%3C/text%3E%3C/svg%3E';
         
         productCard.innerHTML = `
             <div class="product-image">
-                <img src="${product.images[0]}" alt="${product.name}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22600%22%3E%3Crect width=%22600%22 height=%22600%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%22300%22 y=%22300%22 font-family=%22Arial%22 font-size=%2218%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 fill=%22%23666%22%3E${product.name}%3C/text%3E%3C/svg%3E'">
+                <img src="${firstImage}" alt="${product.name}" loading="lazy" 
+                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22600%22%3E%3Crect width=%22600%22 height=%22600%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%22300%22 y=%22300%22 font-family=%22Arial%22 font-size=%2218%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 fill=%22%23666%22%3E${product.name}%3C/text%3E%3C/svg%3E'">
                 <div class="product-overlay">
                     <button class="view-product" data-id="${product.id}">Ver Detalles</button>
                 </div>
@@ -517,7 +523,9 @@ function filterProducts(category) {
     // Desplazarse a la sección de productos
     const productsSection = document.getElementById('products');
     if (productsSection) {
-        productsSection.scrollIntoView({ behavior: 'smooth' });
+        setTimeout(() => {
+            productsSection.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
     }
 }
 
@@ -544,13 +552,21 @@ function renderHeroSlides() {
     heroSlides.forEach((slide, index) => {
         const slideElement = document.createElement('div');
         slideElement.className = `hero-slide ${index === 0 ? 'active' : ''}`;
-        slideElement.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('${slide.image}')`;
-        slideElement.style.backgroundSize = 'cover';
-        slideElement.style.backgroundPosition = 'center';
+        
+        // Usar imagen o color de fondo
+        if (slide.image) {
+            slideElement.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('${slide.image}')`;
+            slideElement.style.backgroundSize = 'cover';
+            slideElement.style.backgroundPosition = 'center';
+            slideElement.style.backgroundRepeat = 'no-repeat';
+        } else {
+            slideElement.style.background = 'linear-gradient(135deg, #000 0%, #333 100%)';
+        }
+        
         slideElement.innerHTML = `
             <div class="hero-content">
-                <h1>${slide.title}</h1>
-                <p>${slide.description}</p>
+                <h1>${slide.title || 'Coquette Sport'}</h1>
+                <p>${slide.description || 'Tu tienda de ropa deportiva de confianza'}</p>
                 <a href="#products" class="hero-btn">Ver Colección</a>
             </div>
         `;
@@ -562,10 +578,11 @@ function renderHeroSlides() {
 function openProductModal(productId) {
     console.log("Abriendo modal para producto ID:", productId);
     
-    // NO usar parseInt - los IDs de Firebase son strings
+    // Usar comparación flexible para IDs
     const product = products.find(p => p.id == productId);
     if (!product) {
         console.error("Producto no encontrado:", productId);
+        showNotification('Producto no encontrado', 'error');
         return;
     }
     
@@ -583,34 +600,43 @@ function openProductModal(productId) {
         }
     }
     
-    updateElementText('modal-product-description', product.description);
+    updateElementText('modal-product-description', product.description || 'Sin descripción disponible');
     updateElementText('modal-product-category', product.category);
     
     // Actualizar imágenes
     const mainImage = document.querySelector('.main-image');
     if (mainImage) {
-        mainImage.innerHTML = `<img src="${product.images[0]}" alt="${product.name}">`;
+        const firstImage = product.images && product.images.length > 0 ? product.images[0] : 
+            product.image || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22600%22%3E%3Crect width=%22600%22 height=%22600%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%22300%22 y=%22300%22 font-family=%22Arial%22 font-size=%2218%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 fill=%22%23666%22%3E${product.name}%3C/text%3E%3C/svg%3E';
+        
+        mainImage.innerHTML = `<img src="${firstImage}" alt="${product.name}" loading="lazy">`;
     }
     
     const thumbnails = document.getElementById('modal-thumbnails');
     if (thumbnails) {
         thumbnails.innerHTML = '';
         
-        product.images.forEach((image, index) => {
-            const thumbnail = document.createElement('div');
-            thumbnail.className = `thumbnail ${index === 0 ? 'active' : ''}`;
-            thumbnail.innerHTML = `<img src="${image}" alt="${product.name}">`;
-            thumbnail.addEventListener('click', () => {
-                // Cambiar imagen principal
-                const mainImg = mainImage.querySelector('img');
-                if (mainImg) mainImg.src = image;
-                
-                // Actualizar miniaturas activas
-                document.querySelectorAll('.thumbnail').forEach(thumb => thumb.classList.remove('active'));
-                thumbnail.classList.add('active');
+        const images = product.images || (product.image ? [product.image] : []);
+        
+        if (images.length === 0) {
+            thumbnails.innerHTML = '<div class="no-images">No hay imágenes disponibles</div>';
+        } else {
+            images.forEach((image, index) => {
+                const thumbnail = document.createElement('div');
+                thumbnail.className = `thumbnail ${index === 0 ? 'active' : ''}`;
+                thumbnail.innerHTML = `<img src="${image}" alt="${product.name} ${index + 1}" loading="lazy">`;
+                thumbnail.addEventListener('click', () => {
+                    // Cambiar imagen principal
+                    const mainImg = mainImage.querySelector('img');
+                    if (mainImg) mainImg.src = image;
+                    
+                    // Actualizar miniaturas activas
+                    document.querySelectorAll('.thumbnail').forEach(thumb => thumb.classList.remove('active'));
+                    thumbnail.classList.add('active');
+                });
+                thumbnails.appendChild(thumbnail);
             });
-            thumbnails.appendChild(thumbnail);
-        });
+        }
     }
     
     // Configurar cantidad
@@ -621,11 +647,14 @@ function openProductModal(productId) {
     const addToCartBtn = document.getElementById('modal-add-to-cart');
     if (addToCartBtn) {
         addToCartBtn.setAttribute('data-id', product.id);
+        addToCartBtn.disabled = false;
+        addToCartBtn.textContent = 'Agregar al carrito';
     }
     
     // Mostrar modal
     if (productModal) {
         productModal.style.display = 'flex';
+        document.body.style.overflow = 'hidden'; // Prevenir scroll del body
         console.log("Modal mostrado");
     }
 }
@@ -634,23 +663,27 @@ function openProductModal(productId) {
 function addToCart(productId, quantity = 1) {
     console.log("Agregando al carrito producto ID:", productId, "cantidad:", quantity);
     
-    // NO usar parseInt - los IDs de Firebase son strings
+    // Usar comparación flexible para IDs
     const product = products.find(p => p.id == productId);
     if (!product) {
         console.error("Producto no encontrado:", productId);
+        showNotification('Producto no encontrado', 'error');
         return;
     }
     
-    const existingItem = cart.find(item => item.id == productId);
+    // Verificar si ya está en el carrito
+    const existingItemIndex = cart.findIndex(item => item.id == productId);
     
-    if (existingItem) {
-        existingItem.quantity += quantity;
+    if (existingItemIndex !== -1) {
+        // Actualizar cantidad si ya existe
+        cart[existingItemIndex].quantity += quantity;
     } else {
+        // Agregar nuevo item al carrito
         cart.push({
             id: product.id,
             name: product.name,
             price: product.price,
-            image: product.images[0],
+            image: (product.images && product.images[0]) || product.image || '',
             quantity: quantity
         });
     }
@@ -666,14 +699,15 @@ function addToCart(productId, quantity = 1) {
 function updateCart() {
     console.log("Actualizando carrito...");
     
-    // Actualizar contador
+    // Actualizar contador del carrito
     if (cartCount) {
-        const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+        const totalItems = cart.reduce((sum, item) => sum + (item.quantity || 0), 0);
         cartCount.textContent = totalItems;
+        cartCount.style.display = totalItems > 0 ? 'flex' : 'none';
         console.log("Total items en carrito:", totalItems);
     }
     
-    // Actualizar lista de productos
+    // Actualizar lista de productos del carrito
     if (!cartItems) return;
     
     cartItems.innerHTML = '';
@@ -690,14 +724,15 @@ function updateCart() {
             const cartItem = document.createElement('div');
             cartItem.className = 'cart-item';
             cartItem.innerHTML = `
-                <img src="${item.image}" alt="${item.name}" class="cart-item-image">
+                <img src="${item.image}" alt="${item.name}" class="cart-item-image" 
+                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%2250%22 y=%2250%22 font-family=%22Arial%22 font-size=%2212%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 fill=%22%23666%22%3E${item.name}%3C/text%3E%3C/svg%3E'">
                 <div class="cart-item-details">
                     <h4 class="cart-item-title">${item.name}</h4>
-                    <p class="cart-item-price">$${(item.price * item.quantity).toFixed(2)}</p>
+                    <p class="cart-item-price">$${(item.price * (item.quantity || 1)).toFixed(2)}</p>
                     <div class="cart-item-actions">
                         <div class="cart-item-quantity">
                             <button class="decrease-quantity" data-id="${item.id}">-</button>
-                            <span>${item.quantity}</span>
+                            <span>${item.quantity || 1}</span>
                             <button class="increase-quantity" data-id="${item.id}">+</button>
                         </div>
                         <button class="remove-item" data-id="${item.id}">
@@ -712,7 +747,7 @@ function updateCart() {
     
     // Actualizar total
     if (cartTotal) {
-        const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const total = cart.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0);
         cartTotal.textContent = `$${total.toFixed(2)}`;
         console.log("Total carrito: $", total.toFixed(2));
     }
@@ -722,13 +757,15 @@ function updateCart() {
 function updateCartItemQuantity(productId, change) {
     console.log("Actualizando cantidad producto ID:", productId, "cambio:", change);
     
-    // NO usar parseInt - los IDs de Firebase son strings
-    const item = cart.find(item => item.id == productId);
-    if (!item) return;
+    // Usar comparación flexible para IDs
+    const itemIndex = cart.findIndex(item => item.id == productId);
+    if (itemIndex === -1) return;
     
-    item.quantity += change;
+    // Actualizar cantidad
+    cart[itemIndex].quantity = (cart[itemIndex].quantity || 1) + change;
     
-    if (item.quantity <= 0) {
+    // Si la cantidad es 0 o menor, eliminar del carrito
+    if (cart[itemIndex].quantity <= 0) {
         removeFromCart(productId);
     } else {
         updateCart();
@@ -740,13 +777,18 @@ function updateCartItemQuantity(productId, change) {
 function removeFromCart(productId) {
     console.log("Eliminando del carrito producto ID:", productId);
     
-    // NO usar parseInt - los IDs de Firebase son strings
-    cart = cart.filter(item => item.id != productId);
+    // Usar comparación flexible para IDs
+    const itemIndex = cart.findIndex(item => item.id == productId);
+    if (itemIndex === -1) return;
+    
+    const removedItem = cart[itemIndex];
+    cart.splice(itemIndex, 1);
+    
     updateCart();
     saveCartToLocalStorage();
     
-    // Actualizar botones de agregar al carrito
-    const productButton = document.querySelector(`.add-to-cart[data-id="${productId}"]`);
+    // Actualizar botones de agregar al carrito en la lista de productos
+    const productButton = document.querySelector(`.add-to-cart[data-id="${removedItem.id}"]`);
     if (productButton) {
         productButton.textContent = 'Agregar al carrito';
         productButton.disabled = false;
@@ -765,23 +807,31 @@ function completeOrder() {
     }
     
     const phone = storeData.whatsapp.replace(/\D/g, '');
+    if (!phone) {
+        showNotification('Número de WhatsApp no configurado', 'error');
+        return;
+    }
+    
     let message = `¡Hola! Me gustaría hacer el siguiente pedido:\n\n`;
     
     cart.forEach((item, index) => {
-        message += `${index + 1}. ${item.name} - ${item.quantity} x $${item.price.toFixed(2)} = $${(item.quantity * item.price).toFixed(2)}\n`;
+        message += `${index + 1}. ${item.name} - ${item.quantity || 1} x $${item.price.toFixed(2)} = $${((item.quantity || 1) * item.price).toFixed(2)}\n`;
     });
     
-    const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const total = cart.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0);
     message += `\nTotal: $${total.toFixed(2)}\n\n`;
-    message += `Por favor, confirmen disponibilidad y forma de pago.`;
+    message += `Por favor, confirmen disponibilidad y forma de pago.\n\n`;
+    message += `---\nPedido de: Coquette Sport`;
     
     const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    
+    // Abrir WhatsApp en nueva ventana
     window.open(url, '_blank');
     
-    // Vaciar carrito después de enviar
-    cart = [];
-    updateCart();
-    saveCartToLocalStorage();
+    // Vaciar carrito después de enviar (opcional)
+    // cart = [];
+    // updateCart();
+    // saveCartToLocalStorage();
     
     // Cerrar carrito
     if (cartSidebar) cartSidebar.classList.remove('open');
@@ -791,13 +841,26 @@ function completeOrder() {
 }
 
 // Mostrar notificación
-function showNotification(message, type) {
+function showNotification(message, type = 'success') {
     console.log("Mostrando notificación:", message);
     
     // Crear elemento de notificación
     const notification = document.createElement('div');
     notification.className = 'notification';
     notification.textContent = message;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: bold;
+        z-index: 10000;
+        animation: slideIn 0.3s ease, slideOut 0.3s ease 2.7s;
+        max-width: 300px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    `;
     
     // Agregar estilo según tipo
     if (type === 'error') {
@@ -814,10 +877,7 @@ function showNotification(message, type) {
     // Remover después de 3 segundos
     setTimeout(() => {
         if (notification.parentNode) {
-            notification.style.animation = 'slideOut 0.3s ease';
-            setTimeout(() => {
-                document.body.removeChild(notification);
-            }, 300);
+            document.body.removeChild(notification);
         }
     }, 3000);
 }
@@ -833,6 +893,7 @@ function initEvents() {
             console.log("Abriendo sidebar");
             if (sidebar) sidebar.classList.add('open');
             if (overlay) overlay.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Prevenir scroll
         });
     }
     
@@ -842,6 +903,7 @@ function initEvents() {
             console.log("Cerrando sidebar");
             if (sidebar) sidebar.classList.remove('open');
             if (overlay) overlay.classList.remove('active');
+            document.body.style.overflow = ''; // Restaurar scroll
         });
     }
     
@@ -851,6 +913,8 @@ function initEvents() {
             if (sidebar) sidebar.classList.remove('open');
             if (overlay) overlay.classList.remove('active');
             if (cartSidebar) cartSidebar.classList.remove('open');
+            if (productModal) productModal.style.display = 'none';
+            document.body.style.overflow = ''; // Restaurar scroll
         });
     }
     
@@ -860,6 +924,7 @@ function initEvents() {
             e.stopPropagation();
             console.log("Abriendo carrito");
             if (cartSidebar) cartSidebar.classList.add('open');
+            document.body.style.overflow = 'hidden'; // Prevenir scroll
         });
     }
     
@@ -868,6 +933,7 @@ function initEvents() {
             e.stopPropagation();
             console.log("Cerrando carrito");
             if (cartSidebar) cartSidebar.classList.remove('open');
+            document.body.style.overflow = ''; // Restaurar scroll
         });
     }
     
@@ -884,6 +950,7 @@ function initEvents() {
             e.stopPropagation();
             console.log("Cerrando modal de producto");
             if (productModal) productModal.style.display = 'none';
+            document.body.style.overflow = ''; // Restaurar scroll
         });
     }
     
@@ -893,6 +960,7 @@ function initEvents() {
             if (e.target === productModal) {
                 console.log("Clic fuera del modal, cerrando");
                 productModal.style.display = 'none';
+                document.body.style.overflow = ''; // Restaurar scroll
             }
         });
     }
@@ -918,14 +986,18 @@ function initEvents() {
     if (modalAddToCartBtn) {
         modalAddToCartBtn.addEventListener('click', function(e) {
             e.stopPropagation();
-            // NO usar parseInt - los IDs de Firebase son strings
             const productId = this.getAttribute('data-id');
             const quantityInput = document.getElementById('modal-quantity');
-            const quantity = quantityInput ? parseInt(quantityInput.value) : 1;
+            const quantity = quantityInput ? parseInt(quantityInput.value) || 1 : 1;
             
             console.log("Agregando al carrito desde modal:", productId, quantity);
             addToCart(productId, quantity);
-            if (productModal) productModal.style.display = 'none';
+            
+            // Cerrar modal
+            if (productModal) {
+                productModal.style.display = 'none';
+                document.body.style.overflow = ''; // Restaurar scroll
+            }
             
             // Actualizar botón en la lista de productos
             const productButton = document.querySelector(`.add-to-cart[data-id="${productId}"]`);
@@ -972,7 +1044,10 @@ function setupEventDelegation() {
     
     // Delegación de eventos para elementos dinámicos
     document.addEventListener('click', function(e) {
-        console.log("Evento click detectado en:", e.target);
+        // Para móviles, también manejar eventos táctiles
+        if (e.type === 'touchstart') {
+            e.preventDefault(); // Prevenir comportamiento por defecto en móviles
+        }
         
         // Categorías
         const categoryCard = e.target.closest('.category-card');
@@ -996,6 +1071,7 @@ function setupEventDelegation() {
             // Cerrar sidebar si está abierto
             if (sidebar) sidebar.classList.remove('open');
             if (overlay) overlay.classList.remove('active');
+            document.body.style.overflow = ''; // Restaurar scroll
         }
         
         // Enlaces de categorías en sidebar
@@ -1020,6 +1096,7 @@ function setupEventDelegation() {
             // Cerrar sidebar
             if (sidebar) sidebar.classList.remove('open');
             if (overlay) overlay.classList.remove('active');
+            document.body.style.overflow = ''; // Restaurar scroll
         }
         
         // Botones de filtro
@@ -1044,7 +1121,6 @@ function setupEventDelegation() {
         if (viewBtn) {
             e.preventDefault();
             e.stopPropagation();
-            // NO usar parseInt - los IDs de Firebase son strings
             const productId = viewBtn.getAttribute('data-id');
             console.log("Clic en ver detalles:", productId);
             openProductModal(productId);
@@ -1055,7 +1131,6 @@ function setupEventDelegation() {
         if (addToCartBtn) {
             e.preventDefault();
             e.stopPropagation();
-            // NO usar parseInt - los IDs de Firebase son strings
             const productId = addToCartBtn.getAttribute('data-id');
             console.log("Clic en agregar al carrito:", productId);
             addToCart(productId);
@@ -1067,7 +1142,6 @@ function setupEventDelegation() {
         const decreaseBtn = e.target.closest('.decrease-quantity');
         if (decreaseBtn) {
             e.stopPropagation();
-            // NO usar parseInt - los IDs de Firebase son strings
             const productId = decreaseBtn.getAttribute('data-id');
             console.log("Disminuir cantidad:", productId);
             updateCartItemQuantity(productId, -1);
@@ -1077,7 +1151,6 @@ function setupEventDelegation() {
         const increaseBtn = e.target.closest('.increase-quantity');
         if (increaseBtn) {
             e.stopPropagation();
-            // NO usar parseInt - los IDs de Firebase son strings
             const productId = increaseBtn.getAttribute('data-id');
             console.log("Aumentar cantidad:", productId);
             updateCartItemQuantity(productId, 1);
@@ -1087,7 +1160,6 @@ function setupEventDelegation() {
         const removeBtn = e.target.closest('.remove-item');
         if (removeBtn) {
             e.stopPropagation();
-            // NO usar parseInt - los IDs de Firebase son strings
             const productId = removeBtn.getAttribute('data-id');
             console.log("Eliminar producto:", productId);
             removeFromCart(productId);
@@ -1104,6 +1176,12 @@ function setupEventDelegation() {
             }
         }
     });
+    
+    // Agregar eventos táctiles para móviles
+    document.addEventListener('touchstart', function(e) {
+        // Delegación para eventos táctiles
+        setupEventDelegation();
+    }, { passive: true });
 }
 
 // Realizar búsqueda
@@ -1121,9 +1199,9 @@ function performSearch() {
     }
     
     const filteredProducts = products.filter(product => 
-        product.name.toLowerCase().includes(query) || 
-        product.description.toLowerCase().includes(query) ||
-        product.category.toLowerCase().includes(query)
+        (product.name && product.name.toLowerCase().includes(query)) || 
+        (product.description && product.description.toLowerCase().includes(query)) ||
+        (product.category && product.category.toLowerCase().includes(query))
     );
     
     const productsGrid = document.getElementById('products-grid');
@@ -1148,10 +1226,12 @@ function performSearch() {
         productCard.setAttribute('data-id', product.id);
         
         const inCart = cart.some(item => item.id == product.id);
+        const firstImage = product.images && product.images.length > 0 ? product.images[0] : 
+            product.image || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22600%22%3E%3Crect width=%22600%22 height=%22600%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%22300%22 y=%22300%22 font-family=%22Arial%22 font-size=%2218%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 fill=%22%23666%22%3E${product.name}%3C/text%3E%3C/svg%3E';
         
         productCard.innerHTML = `
             <div class="product-image">
-                <img src="${product.images[0]}" alt="${product.name}">
+                <img src="${firstImage}" alt="${product.name}" loading="lazy">
                 <div class="product-overlay">
                     <button class="view-product" data-id="${product.id}">Ver Detalles</button>
                 </div>
@@ -1189,4 +1269,25 @@ function checkFirebaseConnection() {
     } catch (error) {
         console.error("Error verificando conexión a Firebase:", error);
     }
+}
+
+// Función para recargar datos (útil para debugging)
+function reloadData() {
+    console.log("Recargando datos...");
+    loadDataFromFirebase().then(() => {
+        renderStoreData();
+        renderCategories();
+        renderProducts();
+        renderHeroSlides();
+        updateCart();
+        showNotification('Datos recargados correctamente');
+    });
+}
+
+// Exportar funciones para debugging
+if (typeof window !== 'undefined') {
+    window.reloadData = reloadData;
+    window.debugCart = () => console.log('Carrito:', cart);
+    window.debugProducts = () => console.log('Productos:', products);
+    window.debugCategories = () => console.log('Categorías:', categories);
 }
