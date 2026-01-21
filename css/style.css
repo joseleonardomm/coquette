@@ -9,6 +9,7 @@
 
 html {
     scroll-behavior: smooth;
+    touch-action: manipulation; /* Mejora respuesta táctil */
 }
 
 body {
@@ -17,6 +18,7 @@ body {
     background-color: #fff;
     line-height: 1.6;
     overflow-x: hidden;
+    overscroll-behavior-y: none; /* Prevenir bounce scroll en iOS */
 }
 
 .container {
@@ -42,9 +44,11 @@ body {
     align-items: center;
     gap: 5px;
     cursor: pointer;
-    z-index: 1001;
+    z-index: 1003 !important; /* Mayor z-index para móviles */
     transition: all 0.3s ease;
     padding: 10px;
+    min-height: 44px !important;
+    min-width: 44px !important;
 }
 
 .menu-toggle:hover {
@@ -193,6 +197,8 @@ body {
     align-items: center;
     justify-content: center;
     transition: all 0.3s ease;
+    min-height: 44px !important;
+    min-width: 44px !important;
 }
 
 .close-sidebar:hover {
@@ -206,6 +212,25 @@ body {
     height: calc(100% - 120px);
     display: flex;
     flex-direction: column;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #C5A451 #f1f1f1;
+}
+
+.sidebar-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb {
+    background: #C5A451;
+    border-radius: 3px;
 }
 
 .sidebar-nav h3 {
@@ -340,6 +365,9 @@ body {
     background: rgba(255, 255, 255, 0.95);
     color: #333;
     transition: all 0.3s ease;
+    font-size: 16px !important; /* Prevenir zoom en iOS */
+    -webkit-appearance: none;
+    appearance: none;
 }
 
 .search-container input:focus {
@@ -360,6 +388,7 @@ body {
     font-weight: 600;
     transition: all 0.3s ease;
     min-width: 60px;
+    min-height: 44px !important;
 }
 
 .search-container button:hover {
@@ -386,6 +415,9 @@ body {
     justify-content: center;
     transition: all 0.3s ease;
     box-shadow: 0 4px 15px rgba(197, 164, 81, 0.3);
+    z-index: 1003 !important; /* Mayor z-index para móviles */
+    min-height: 44px !important;
+    min-width: 44px !important;
 }
 
 .cart-btn:hover {
@@ -461,6 +493,8 @@ body {
     justify-content: center;
     border-radius: 50%;
     transition: all 0.3s ease;
+    min-height: 44px !important;
+    min-width: 44px !important;
 }
 
 .close-cart:hover {
@@ -473,6 +507,24 @@ body {
     flex-grow: 1;
     overflow-y: auto;
     padding: 25px;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: #C5A451 #f1f1f1;
+}
+
+.cart-items::-webkit-scrollbar {
+    width: 6px;
+}
+
+.cart-items::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.cart-items::-webkit-scrollbar-thumb {
+    background: #C5A451;
+    border-radius: 3px;
 }
 
 .empty-cart {
@@ -642,6 +694,7 @@ body {
     transition: all 0.3s ease;
     letter-spacing: 0.5px;
     box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
+    min-height: 44px !important;
 }
 
 .checkout-btn:hover {
@@ -731,6 +784,7 @@ body {
     box-shadow: 0 6px 20px rgba(197, 164, 81, 0.4);
     position: relative;
     overflow: hidden;
+    min-height: 44px !important;
 }
 
 .hero-btn:hover {
@@ -783,6 +837,11 @@ body {
     border: 2px solid transparent;
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
     position: relative;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    animation: fadeInUp 0.6s ease forwards;
 }
 
 .category-card:hover {
@@ -858,6 +917,12 @@ body {
     font-family: 'Montserrat', sans-serif;
     font-size: 15px;
     color: #555;
+    min-height: 44px !important;
+    min-width: 44px !important;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 .filter-btn.active, .filter-btn:hover {
@@ -882,6 +947,11 @@ body {
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
     position: relative;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    animation: fadeInUp 0.6s ease forwards;
 }
 
 .product-card:hover {
@@ -937,6 +1007,8 @@ body {
     font-size: 15px;
     transition: all 0.3s ease;
     letter-spacing: 0.5px;
+    min-height: 44px !important;
+    min-width: 44px !important;
 }
 
 .view-product:hover {
@@ -1006,6 +1078,7 @@ body {
     font-size: 15px;
     letter-spacing: 0.5px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    min-height: 44px !important;
 }
 
 .add-to-cart:hover {
@@ -1123,6 +1196,8 @@ body {
     animation: modalFadeIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
     border: 3px solid #C5A451;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
 }
 
 @keyframes modalFadeIn {
@@ -1147,6 +1222,8 @@ body {
     justify-content: center;
     font-size: 20px;
     transition: all 0.3s ease;
+    min-height: 44px !important;
+    min-width: 44px !important;
 }
 
 .close-product-modal:hover {
@@ -1283,6 +1360,8 @@ body {
     justify-content: center;
     transition: all 0.3s ease;
     color: #333;
+    min-height: 44px !important;
+    min-width: 44px !important;
 }
 
 .quantity-btn:hover {
@@ -1300,6 +1379,7 @@ body {
     font-family: 'Montserrat', sans-serif;
     background: #fff;
     color: #000;
+    font-size: 16px !important;
 }
 
 .add-to-cart-btn {
@@ -1319,6 +1399,7 @@ body {
     transition: all 0.3s ease;
     letter-spacing: 0.5px;
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    min-height: 44px !important;
 }
 
 .add-to-cart-btn:hover {
@@ -1541,11 +1622,6 @@ body {
 /* ==========================================
    ANIMACIONES SUAVES
    ========================================== */
-.category-card,
-.product-card {
-    animation: fadeInUp 0.6s ease forwards;
-}
-
 @keyframes fadeInUp {
     from {
         opacity: 0;
@@ -1780,6 +1856,64 @@ body {
     .main-image {
         height: 300px;
     }
+    
+    /* Mejorar animaciones para móviles */
+    .sidebar,
+    .cart-sidebar {
+        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        transform: translateX(-100%);
+    }
+    
+    .sidebar.open {
+        transform: translateX(0);
+    }
+    
+    .cart-sidebar {
+        transform: translateX(100%);
+    }
+    
+    .cart-sidebar.open {
+        transform: translateX(0);
+    }
+    
+    /* Deshabilitar hover en móviles */
+    .category-card:hover,
+    .product-card:hover {
+        transform: none !important;
+    }
+    
+    .product-overlay {
+        opacity: 0 !important;
+    }
+    
+    /* Mejorar velocidad de carga de imágenes */
+    img {
+        content-visibility: auto;
+    }
+    
+    /* Reducir animaciones pesadas */
+    .hero-slider {
+        height: 400px;
+    }
+    
+    .hero-slide {
+        transition: opacity 0.5s ease;
+    }
+    
+    /* Corregir tamaño de modales en móviles */
+    .product-modal-content {
+        width: 96% !important;
+        max-height: 90vh !important;
+        margin: 2vh auto !important;
+        border-radius: 16px;
+    }
+    
+    .product-modal-body {
+        padding: 24px !important;
+        gap: 24px !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
 }
 
 @media (max-width: 576px) {
@@ -1806,8 +1940,11 @@ body {
     }
     
     .hero-btn {
-        padding: 14px 35px;
-        font-size: 15px;
+        padding: 18px 24px !important;
+        font-size: 17px !important;
+        min-height: 56px !important;
+        margin: 8px 0;
+        border-radius: 12px;
     }
     
     .section-title {
@@ -1862,6 +1999,79 @@ body {
     .product-image {
         height: 180px;
     }
+    
+    /* Espaciado seguro para dedos */
+    .product-card {
+        margin-bottom: 16px;
+    }
+    
+    .category-card {
+        margin-bottom: 16px;
+    }
+    
+    /* Evitar superposiciones táctiles */
+    .menu-toggle {
+        margin-right: 12px;
+        z-index: 1003;
+    }
+    
+    .cart-btn {
+        margin-left: 12px;
+        z-index: 1003;
+    }
+    
+    /* Botones más grandes para móviles */
+    .checkout-btn,
+    .add-to-cart-btn {
+        padding: 18px 24px !important;
+        font-size: 17px !important;
+        min-height: 56px !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .filter-btn {
+        padding: 14px 24px !important;
+        margin: 6px;
+        min-height: 48px;
+        border-radius: 10px;
+    }
+    
+    .add-to-cart,
+    .view-product,
+    .filter-btn {
+        font-size: 16px !important;
+        padding: 14px 20px !important;
+        border-radius: 10px;
+        margin: 4px 0;
+    }
+}
+
+/* Corrección para dispositivos muy pequeños */
+@media (max-width: 360px) {
+    .menu-toggle,
+    .cart-btn {
+        min-width: 40px !important;
+        min-height: 40px !important;
+        padding: 8px !important;
+    }
+    
+    .brand-name {
+        font-size: 12px !important;
+    }
+    
+    .hero-btn,
+    .checkout-btn,
+    .add-to-cart-btn {
+        padding: 16px 20px !important;
+        font-size: 16px !important;
+    }
+    
+    .product-modal-content {
+        width: 98% !important;
+        margin: 1vh auto !important;
+    }
 }
 
 /* ==========================================
@@ -1886,7 +2096,81 @@ body {
     background: linear-gradient(135deg, #d4b668 0%, #e5c77e 100%);
 }
 
-/* Mejoras de accesibilidad */
+/* ==========================================
+   MEJORAS DE ACCESIBILIDAD Y TÁCTILES
+   ========================================== */
+
+/* Mejorar respuesta táctil en móviles */
+button, 
+a, 
+input[type="button"],
+input[type="submit"] {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+    tap-highlight-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Prevenir scroll cuando hay modales abiertos */
+body.sidebar-open,
+body.cart-open,
+body.modal-open {
+    overflow: hidden !important;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+}
+
+/* Feedback táctil mejorado */
+button:active,
+a:active {
+    transform: scale(0.98);
+    transition: transform 0.1s;
+}
+
+/* Delay para evitar clics accidentales en enlaces de categoría */
+@media (max-width: 768px) {
+    .category-card:active,
+    .product-card:active {
+        transform: scale(0.98);
+    }
+}
+
+/* Correcciones específicas para iOS */
+@supports (-webkit-touch-callout: none) {
+    /* Safari y Chrome iOS */
+    input, textarea {
+        font-size: 16px !important;
+    }
+    
+    /* Mejorar rendimiento de animaciones */
+    .sidebar,
+    .cart-sidebar,
+    .product-modal {
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+    }
+}
+
+/* Permitir selección en inputs */
+input, textarea {
+    -webkit-user-select: auto !important;
+    -moz-user-select: auto !important;
+    -ms-user-select: auto !important;
+    user-select: auto !important;
+}
+
+/* Prevenir selección de texto accidental */
+.category-card,
+.product-card,
+.filter-btn,
+button,
+a:not([href*="mailto"]):not([href*="tel"]) {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* Focus styles para accesibilidad */
 button:focus,
 input:focus,
 select:focus,
@@ -1894,153 +2178,41 @@ textarea:focus {
     outline: 3px solid rgba(197, 164, 81, 0.5);
     outline-offset: 2px;
 }
-/* ==========================================
-   CORRECCIONES PARA MÓVILES - EVITAR COLGADOS
-   ========================================== */
 
-/* Mejorar respuesta táctil en móviles */
-button, 
-a, 
-input, 
-select, 
-textarea {
-    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-    -webkit-tap-highlight-color: transparent;
-}
-
-/* Aumentar área de toque en móviles */
-.menu-toggle,
-.cart-btn,
-.close-sidebar,
-.close-cart,
-.close-product-modal,
-.filter-btn,
-.view-product,
-.add-to-cart,
-.add-to-cart-btn,
-.checkout-btn {
-    min-height: 44px;
-    min-width: 44px;
-}
-
-/* Prevenir zoom en inputs en iOS */
-input, select, textarea {
-    font-size: 16px !important;
-}
-
-/* Mejorar scroll en móviles */
-.cart-items,
-.sidebar-content {
-    -webkit-overflow-scrolling: touch;
-    overflow-scrolling: touch;
-}
-
-/* Prevenir scroll cuando hay modales abiertos */
-body.modal-open {
-    overflow: hidden;
-    position: fixed;
-    width: 100%;
-    height: 100%;
-}
-
-/* Mejorar animaciones para móviles */
-@media (max-width: 768px) {
-    .sidebar,
-    .cart-sidebar {
-        transition: transform 0.3s ease;
-        transform: translateX(-100%);
-    }
-    
-    .sidebar.open {
-        transform: translateX(0);
-    }
-    
-    .cart-sidebar {
-        transform: translateX(100%);
-    }
-    
-    .cart-sidebar.open {
-        transform: translateX(0);
-    }
-    
-    /* Deshabilitar algunas animaciones pesadas en móviles */
-    .category-card:hover,
-    .product-card:hover {
-        transform: none;
-    }
-    
-    /* Mejorar velocidad de carga de imágenes */
-    img {
-        content-visibility: auto;
+/* Prevenir efecto sticky en móviles con teclado virtual */
+@media (max-height: 500px) and (orientation: landscape) {
+    .main-header {
+        position: relative !important;
     }
 }
 
-/* Corregir problemas de z-index en móviles */
-.menu-toggle {
-    z-index: 1002 !important;
-}
-
-.cart-btn {
-    z-index: 1002 !important;
-}
-
-/* Prevenir selección de texto accidental en móviles */
-.category-card,
-.product-card,
-.filter-btn {
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-}
-
-/* Mejorar visibilidad de botones en móviles */
+/* Mejorar espaciado entre elementos táctiles */
 @media (max-width: 576px) {
-    .hero-btn,
-    .checkout-btn,
-    .add-to-cart-btn {
-        padding: 16px 20px;
-        font-size: 16px;
-        min-height: 50px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    .products-grid,
+    .categories-grid {
+        gap: 20px !important;
+    }
+}
+
+/* Corrección para dispositivos con stylus o lápices */
+@media (pointer: fine) {
+    .product-overlay {
+        opacity: 0;
+        transition: opacity 0.3s ease;
     }
     
+    .product-card:hover .product-overlay {
+        opacity: 1;
+    }
+}
+
+/* Delay para prevenir clics accidentales en móviles */
+@media (hover: none) and (pointer: coarse) {
+    .menu-toggle,
+    .cart-btn,
+    .add-to-cart,
+    .view-product,
     .filter-btn {
-        padding: 10px 20px;
-        margin: 5px;
+        touch-action: manipulation;
     }
-}
-
-/* Corregir problemas de overflow en móviles */
-@media (max-width: 768px) {
-    .product-modal-content {
-        width: 95%;
-        max-height: 85vh;
-        margin: 10px;
-    }
-    
-    .product-modal-body {
-        padding: 20px;
-        gap: 20px;
-    }
-}
-
-/* Prevenir ghost clicks en iOS */
-* {
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-}
-
-input, textarea {
-    -webkit-user-select: auto !important;
-    -khtml-user-select: auto !important;
-    -moz-user-select: auto !important;
-    -ms-user-select: auto !important;
-    user-select: auto !important;
 }

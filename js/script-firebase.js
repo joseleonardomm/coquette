@@ -17,15 +17,16 @@ let heroSlides = [];
 // Carrito de compras
 let cart = [];
 
+// Variables para control de eventos táctiles
+let isScrolling = false;
+let scrollTimeout;
+let lastClickTime = 0;
+const CLICK_DELAY = 300; // 300ms entre clics
+
 // DOM Elements
 let sidebar, overlay, menuToggle, closeSidebar, cartSidebar, cartBtn, closeCart;
 let cartItems, cartTotal, cartCount, checkoutBtn, productModal, closeProductModal;
 let searchInput, searchButton;
-
-// Variables para control de eventos táctiles
-let touchStartX = 0;
-let touchStartY = 0;
-let lastTap = 0;
 
 // Inicializar la aplicación
 document.addEventListener('DOMContentLoaded', async function() {
@@ -590,9 +591,7 @@ function openProductModal(productId) {
     console.log("Abriendo modal para producto ID:", productId);
     
     // Cerrar cualquier sidebar abierto primero
-    if (sidebar) sidebar.classList.remove('open');
-    if (cartSidebar) cartSidebar.classList.remove('open');
-    if (overlay) overlay.classList.remove('active');
+    closeAllModals();
     
     // Usar comparación flexible para IDs
     const product = products.find(p => p.id == productId);
@@ -670,11 +669,8 @@ function openProductModal(productId) {
     // Mostrar modal
     if (productModal) {
         productModal.style.display = 'flex';
-        document.body.style.overflow = 'hidden'; // Prevenir scroll del body
-        console.log("Modal mostrado");
-        
-        // En móviles, agregar clase para prevenir scroll
         document.body.classList.add('modal-open');
+        console.log("Modal mostrado");
     }
 }
 
@@ -903,91 +899,112 @@ function showNotification(message, type = 'success') {
 
 // Inicializar eventos
 function initEvents() {
-    console.log("Inicializando eventos...");
+    console.log("Inicializando eventos con prevención de clics rápidos...");
     
-    // Sidebar
+    // Función para prevenir clics rápidos
+    function preventFastClicks(e) {
+        const currentTime = new Date().getTime();
+        const timeSinceLastClick = currentTime - lastClickTime;
+        
+        if (timeSinceLastClick < CLICK_DELAY) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log("Clic rápido prevenido");
+            return true;
+        }
+        
+        lastClickTime = currentTime;
+        return false;
+    }
+    
+    // Sidebar con prevención de clics rápidos
     if (menuToggle) {
         menuToggle.addEventListener('click', function(e) {
+            if (preventFastClicks(e)) return;
+            
             e.stopPropagation();
             console.log("Abriendo sidebar");
+            
+            // Añadir clase al body
+            document.body.classList.add('sidebar-open');
+            
             if (sidebar) sidebar.classList.add('open');
-            if (overlay) overlay.classList.add('active');
-            document.body.style.overflow = 'hidden'; // Prevenir scroll
+            if (overlay) {
+                overlay.classList.add('active');
+                overlay.style.zIndex = '999';
+            }
         });
-        
-        // Para móviles, prevenir comportamiento por defecto en touch
-        menuToggle.addEventListener('touchstart', function(e) {
-            e.preventDefault();
-            this.click();
-        }, { passive: false });
     }
     
     if (closeSidebar) {
         closeSidebar.addEventListener('click', function(e) {
+            if (preventFastClicks(e)) return;
+            
             e.stopPropagation();
             console.log("Cerrando sidebar");
+            
+            // Remover clase del body
+            document.body.classList.remove('sidebar-open');
+            
             if (sidebar) sidebar.classList.remove('open');
-            if (overlay) overlay.classList.remove('active');
-            document.body.style.overflow = ''; // Restaurar scroll
-        });
-    }
-    
-    if (overlay) {
-        overlay.addEventListener('click', function(e) {
-            console.log("Clic en overlay, cerrando todo");
-            closeAllModals();
-        });
-        
-        // Para móviles, prevenir comportamiento por defecto
-        overlay.addEventListener('touchstart', function(e) {
-            if (sidebar.classList.contains('open') || cartSidebar.classList.contains('open')) {
-                e.preventDefault();
-                this.click();
+            if (overlay) {
+                overlay.classList.remove('active');
+                overlay.style.zIndex = '';
             }
-        }, { passive: false });
+        });
     }
     
-    // Carrito
+    // Carrito con prevención de clics rápidos
     if (cartBtn) {
         cartBtn.addEventListener('click', function(e) {
+            if (preventFastClicks(e)) return;
+            
             e.stopPropagation();
             console.log("Abriendo carrito");
+            
+            // Añadir clase al body
+            document.body.classList.add('cart-open');
+            
             if (cartSidebar) cartSidebar.classList.add('open');
-            document.body.style.overflow = 'hidden'; // Prevenir scroll
         });
-        
-        // Para móviles
-        cartBtn.addEventListener('touchstart', function(e) {
-            e.preventDefault();
-            this.click();
-        }, { passive: false });
     }
     
     if (closeCart) {
         closeCart.addEventListener('click', function(e) {
+            if (preventFastClicks(e)) return;
+            
             e.stopPropagation();
             console.log("Cerrando carrito");
+            
+            // Remover clase del body
+            document.body.classList.remove('cart-open');
+            
             if (cartSidebar) cartSidebar.classList.remove('open');
-            document.body.style.overflow = ''; // Restaurar scroll
         });
     }
     
-    if (checkoutBtn) {
-        checkoutBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            completeOrder();
+    // Overlay - cierra todo
+    if (overlay) {
+        overlay.addEventListener('click', function(e) {
+            if (preventFastClicks(e)) return;
+            
+            console.log("Clic en overlay, cerrando todo");
+            closeAllModals();
         });
         
-        // Para móviles
-        checkoutBtn.addEventListener('touchstart', function(e) {
-            e.preventDefault();
-            this.click();
+        // Prevenir scroll en overlay
+        overlay.addEventListener('touchmove', function(e) {
+            if (overlay.classList.contains('active')) {
+                e.preventDefault();
+            }
         }, { passive: false });
     }
     
     // Modal de producto
     if (closeProductModal) {
         closeProductModal.addEventListener('click', function(e) {
+            if (preventFastClicks(e)) return;
+            
             e.stopPropagation();
             console.log("Cerrando modal de producto");
             closeProductModalFunc();
@@ -997,32 +1014,29 @@ function initEvents() {
     // Cerrar modal al hacer clic fuera
     if (productModal) {
         productModal.addEventListener('click', function(e) {
+            if (preventFastClicks(e)) return;
+            
             if (e.target === productModal) {
                 console.log("Clic fuera del modal, cerrando");
                 closeProductModalFunc();
             }
         });
+        
+        // Prevenir scroll en modal
+        productModal.addEventListener('touchmove', function(e) {
+            if (productModal.style.display === 'flex') {
+                e.stopPropagation();
+            }
+        }, { passive: false });
     }
     
     // Buscador
     if (searchButton) {
         searchButton.addEventListener('click', function(e) {
+            if (preventFastClicks(e)) return;
+            
             e.stopPropagation();
             performSearch();
-        });
-        
-        // Para móviles
-        searchButton.addEventListener('touchstart', function(e) {
-            e.preventDefault();
-            this.click();
-        }, { passive: false });
-    }
-    
-    if (searchInput) {
-        searchInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                performSearch();
-            }
         });
     }
     
@@ -1030,6 +1044,8 @@ function initEvents() {
     const modalAddToCartBtn = document.getElementById('modal-add-to-cart');
     if (modalAddToCartBtn) {
         modalAddToCartBtn.addEventListener('click', function(e) {
+            if (preventFastClicks(e)) return;
+            
             e.stopPropagation();
             const productId = this.getAttribute('data-id');
             const quantityInput = document.getElementById('modal-quantity');
@@ -1038,140 +1054,96 @@ function initEvents() {
             console.log("Agregando al carrito desde modal:", productId, quantity);
             addToCart(productId, quantity);
             
-            // Cerrar modal
             closeProductModalFunc();
-            
-            // Actualizar botón en la lista de productos
-            const productButton = document.querySelector(`.add-to-cart[data-id="${productId}"]`);
-            if (productButton) {
-                productButton.textContent = 'En el carrito';
-                productButton.disabled = true;
-            }
         });
-        
-        // Para móviles
-        modalAddToCartBtn.addEventListener('touchstart', function(e) {
-            e.preventDefault();
-            this.click();
-        }, { passive: false });
     }
     
-    // Botones de cantidad en el modal de producto
+    // Botones de cantidad
     const minusBtn = document.querySelector('.quantity-btn.minus');
     const plusBtn = document.querySelector('.quantity-btn.plus');
     
     if (minusBtn) {
         minusBtn.addEventListener('click', function(e) {
+            if (preventFastClicks(e)) return;
+            
             e.stopPropagation();
             const quantityInput = document.getElementById('modal-quantity');
             if (quantityInput && quantityInput.value > 1) {
                 quantityInput.value = parseInt(quantityInput.value) - 1;
             }
         });
-        
-        // Para móviles
-        minusBtn.addEventListener('touchstart', function(e) {
-            e.preventDefault();
-            this.click();
-        }, { passive: false });
     }
     
     if (plusBtn) {
         plusBtn.addEventListener('click', function(e) {
+            if (preventFastClicks(e)) return;
+            
             e.stopPropagation();
             const quantityInput = document.getElementById('modal-quantity');
             if (quantityInput && quantityInput.value < 10) {
                 quantityInput.value = parseInt(quantityInput.value) + 1;
             }
         });
+    }
+    
+    // Configurar delegación de eventos con prevención de clics rápidos
+    setupEventDelegation(preventFastClicks);
+    
+    // Prevenir scroll no deseado en móviles
+    setupScrollPrevention();
+    
+    console.log("Eventos inicializados con prevención de clics rápidos");
+}
+
+// Nueva función para prevenir scroll no deseado
+function setupScrollPrevention() {
+    // Prevenir scroll cuando hay elementos abiertos
+    document.addEventListener('touchmove', function(e) {
+        const isSidebarOpen = sidebar && sidebar.classList.contains('open');
+        const isCartOpen = cartSidebar && cartSidebar.classList.contains('open');
+        const isModalOpen = productModal && productModal.style.display === 'flex';
         
-        // Para móviles
-        plusBtn.addEventListener('touchstart', function(e) {
-            e.preventDefault();
-            this.click();
-        }, { passive: false });
-    }
+        if (isSidebarOpen || isCartOpen || isModalOpen) {
+            // Permitir scroll solo en el elemento abierto
+            const target = e.target;
+            const isScrollableElement = 
+                target.closest('.sidebar-content') ||
+                target.closest('.cart-items') ||
+                target.closest('.product-modal-content');
+            
+            if (!isScrollableElement) {
+                e.preventDefault();
+            }
+        }
+    }, { passive: false });
     
-    // Configurar delegación de eventos PARA ELEMENTOS DINÁMICOS
-    setupEventDelegation();
-    
-    // Agregar eventos táctiles globales para prevenir comportamientos no deseados
-    document.addEventListener('touchstart', handleTouchStart, { passive: true });
-    document.addEventListener('touchend', handleTouchEnd, { passive: true });
-    document.addEventListener('touchmove', handleTouchMove, { passive: true });
-    
-    console.log("Eventos inicializados");
-}
-
-// Función para cerrar todos los modales
-function closeAllModals() {
-    if (sidebar) sidebar.classList.remove('open');
-    if (overlay) overlay.classList.remove('active');
-    if (cartSidebar) cartSidebar.classList.remove('open');
-    if (productModal) productModal.style.display = 'none';
-    document.body.style.overflow = ''; // Restaurar scroll
-    document.body.classList.remove('modal-open');
-}
-
-// Función para cerrar modal de producto
-function closeProductModalFunc() {
-    if (productModal) productModal.style.display = 'none';
-    document.body.style.overflow = ''; // Restaurar scroll
-    document.body.classList.remove('modal-open');
-}
-
-// Manejar eventos táctiles
-function handleTouchStart(e) {
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
-    
-    // Detectar doble toque para prevenir zoom
-    const currentTime = new Date().getTime();
-    const tapLength = currentTime - lastTap;
-    
-    if (tapLength < 300 && tapLength > 0) {
-        e.preventDefault();
-    }
-    
-    lastTap = currentTime;
-}
-
-function handleTouchEnd(e) {
-    // Liberar recursos si es necesario
-}
-
-function handleTouchMove(e) {
-    // Prevenir scroll cuando hay modales abiertos
-    if (document.body.classList.contains('modal-open') || 
-        sidebar.classList.contains('open') || 
-        cartSidebar.classList.contains('open')) {
-        e.preventDefault();
-    }
+    // Detectar scroll para evitar conflictos con clics
+    window.addEventListener('scroll', function() {
+        isScrolling = true;
+        
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(function() {
+            isScrolling = false;
+        }, 100);
+    });
 }
 
 // Configurar delegación de eventos para elementos dinámicos
-function setupEventDelegation() {
+function setupEventDelegation(preventFastClicks) {
     console.log("Configurando delegación de eventos...");
     
     // Función manejadora para eventos
     function handleEvent(e) {
-        // Para móviles, prevenir comportamiento por defecto en elementos interactivos
-        if (e.type === 'touchstart') {
-            const tagName = e.target.tagName.toLowerCase();
-            const isInteractive = ['button', 'a', 'input', 'select', 'textarea'].includes(tagName);
-            
-            if (isInteractive) {
-                e.preventDefault();
-            }
-            
-            // Simular clic después de un breve retraso para móviles
-            if (e.target.closest('button, a')) {
-                setTimeout(() => {
-                    if (!e.defaultPrevented) {
-                        e.target.click();
-                    }
-                }, 50);
-            }
+        // Prevenir clics durante scroll
+        if (isScrolling) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+        }
+        
+        // Prevenir clics rápidos si se pasa la función
+        if (preventFastClicks && preventFastClicks(e)) {
+            return;
         }
         
         // Categorías
@@ -1298,9 +1270,37 @@ function setupEventDelegation() {
         }
     }
     
-    // Agregar event listeners para click y touchstart
+    // Usar solo click, no touchstart
     document.addEventListener('click', handleEvent);
-    document.addEventListener('touchstart', handleEvent, { passive: false });
+    
+    // Para móviles, agregar touchstart con prevención
+    document.addEventListener('touchstart', function(e) {
+        // Solo prevenir comportamiento por defecto en elementos interactivos
+        const tag = e.target.tagName.toLowerCase();
+        if (['button', 'a', 'input', 'select'].includes(tag)) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+}
+
+// Función para cerrar todos los modales
+function closeAllModals() {
+    console.log("Cerrando todos los modales");
+    
+    if (sidebar) sidebar.classList.remove('open');
+    if (overlay) overlay.classList.remove('active');
+    if (cartSidebar) cartSidebar.classList.remove('open');
+    if (productModal) productModal.style.display = 'none';
+    
+    // Remover todas las clases de bloqueo
+    document.body.classList.remove('sidebar-open', 'cart-open', 'modal-open');
+    document.body.style.overflow = '';
+}
+
+// Función para cerrar modal de producto
+function closeProductModalFunc() {
+    if (productModal) productModal.style.display = 'none';
+    document.body.classList.remove('modal-open');
 }
 
 // Realizar búsqueda
@@ -1346,7 +1346,7 @@ function performSearch() {
         
         const inCart = cart.some(item => item.id == product.id);
         const firstImage = product.images && product.images.length > 0 ? product.images[0] : 
-            product.image || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22600%22%3E%3Crect width=%22600%22 height=%22600%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%22300%22 y=%22300%22 font-family=%22Arial%22 font-size=%2218%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 fill=%22%23666%22%3E${product.name}%3C/text%3E%3C/svg%3E';
+            product.image || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22600%22%3E%3Crect width=%22600% height=%22600%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%22300%22 y=%22300%22 font-family=%22Arial%22 font-size=%2218%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 fill=%22%23666%22%3E${product.name}%3C/text%3E%3C/svg%3E';
         
         productCard.innerHTML = `
             <div class="product-image">
