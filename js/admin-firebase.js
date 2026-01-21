@@ -23,13 +23,53 @@ let currentUploadingImages = [];
 let navButtons, adminSections, saveStoreBtn, addCategoryBtn, addProductBtn, addPromotionBtn, addSlideBtn;
 let notification, categoryModal, productModal, promotionModal, slideModal, confirmModal;
 
+// Inicializar Firebase
+function initializeFirebase() {
+    try {
+        console.log("Inicializando Firebase...");
+        
+        // Verificar si Firebase está cargado
+        if (typeof firebase === 'undefined') {
+            console.error("Firebase SDK no está cargado");
+            return false;
+        }
+        
+        // Configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAP44JZQ8z6XQBxGLRGSvfoJ00ChZIzqT8",
+            authDomain: "coquette-sport.firebaseapp.com",
+            databaseURL: "https://coquette-sport-default-rtdb.firebaseio.com",
+            projectId: "coquette-sport",
+            storageBucket: "coquette-sport.firebasestorage.app",
+            messagingSenderId: "433999067952",
+            appId: "1:433999067952:web:042000b97feff3e339e6f5"
+        };
+        
+        // Inicializar Firebase solo si no está inicializado
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+            console.log("Firebase inicializado correctamente");
+        } else {
+            console.log("Firebase ya estaba inicializado");
+        }
+        
+        return true;
+        
+    } catch (error) {
+        console.error("Error inicializando Firebase:", error);
+        return false;
+    }
+}
+
 // Inicializar el panel de administración
 document.addEventListener('DOMContentLoaded', function() {
     console.log("Panel de administración con Firebase inicializando...");
     
-    // Verificar si Firebase está cargado
-    if (typeof firebase === 'undefined') {
-        console.error("Firebase no está cargado. Asegúrate de incluir firebase-config.js");
+    // Inicializar Firebase primero
+    const firebaseInitialized = initializeFirebase();
+    
+    if (!firebaseInitialized) {
+        console.error("No se pudo inicializar Firebase");
         showNotification('Error: Firebase no está configurado', 'error');
         return;
     }
@@ -124,101 +164,64 @@ async function loadAllDataFromFirebase() {
     try {
         console.log("Cargando datos desde Firebase Realtime Database...");
         
+        const database = firebase.database();
+        
+        // Función helper para convertir objetos de Firebase a arrays
+        const firebaseObjectToArray = (obj) => {
+            if (!obj) return [];
+            return Object.keys(obj).map(key => ({
+                firebaseKey: key,
+                id: obj[key].id || key, // Usar id del objeto o la clave de Firebase
+                ...obj[key]
+            }));
+        };
+        
         // Cargar datos de la tienda
-        const storeSnapshot = await db.getStoreData();
+        const storeSnapshot = await database.ref('tienda').once('value');
         if (storeSnapshot.exists()) {
-            const firebaseData = storeSnapshot.val();
-            // Combina con datos por defecto para mantener estructura completa
-            storeData = { ...storeData, ...firebaseData };
-            console.log("Datos de tienda cargados desde Firebase:", storeData);
-        } else {
-            console.log("No hay datos de tienda en Firebase, usando datos por defecto");
+            storeData = { ...storeData, ...storeSnapshot.val() };
+            console.log("Datos de tienda cargados desde Firebase");
         }
         
         // Cargar categorías
-        const categoriesSnapshot = await db.getCategories();
-        if (categoriesSnapshot.exists()) {
-            const cats = categoriesSnapshot.val();
-            // Convierte objeto a array
-            categories = [];
-            if (cats) {
-                Object.keys(cats).forEach(key => {
-                    // Mantener el ID del objeto (key) y los datos
-                    categories.push({ 
-                        firebaseKey: key, // Guardamos la clave de Firebase
-                        id: cats[key].id || key, // Usar id del objeto o la clave
-                        ...cats[key] 
-                    });
-                });
-            }
-            console.log("Categorías cargadas desde Firebase:", categories.length);
-        }
+        const categoriesSnapshot = await database.ref('categorias').once('value');
+        const cats = categoriesSnapshot.val();
+        categories = firebaseObjectToArray(cats);
+        console.log("Categorías cargadas desde Firebase:", categories.length);
         
         // Cargar productos
-        const productsSnapshot = await db.getProducts();
-        if (productsSnapshot.exists()) {
-            const prods = productsSnapshot.val();
-            // Convierte objeto a array
-            products = [];
-            if (prods) {
-                Object.keys(prods).forEach(key => {
-                    const productData = prods[key];
-                    // Asegurar que price y originalPrice sean números
-                    products.push({ 
-                        firebaseKey: key,
-                        id: productData.id || key,
-                        name: productData.name || '',
-                        category: productData.category || '',
-                        price: parseFloat(productData.price) || 0,
-                        originalPrice: productData.originalPrice ? parseFloat(productData.originalPrice) : null,
-                        description: productData.description || '',
-                        images: productData.images || []
-                    });
-                });
-            }
-            console.log("Productos cargados desde Firebase:", products.length);
-        }
+        const productsSnapshot = await database.ref('productos').once('value');
+        const prods = productsSnapshot.val();
+        const productsArray = firebaseObjectToArray(prods);
+        
+        // Procesar productos para asegurar tipos de datos correctos
+        products = productsArray.map(product => ({
+            ...product,
+            price: parseFloat(product.price) || 0,
+            originalPrice: product.originalPrice ? parseFloat(product.originalPrice) : null,
+            images: Array.isArray(product.images) ? product.images : [],
+            description: product.description || '',
+            category: product.category || ''
+        }));
+        
+        console.log("Productos cargados desde Firebase:", products.length);
         
         // Cargar promociones (si existe el nodo)
         try {
-            const promotionsSnapshot = await db.getPromotions();
-            if (promotionsSnapshot.exists()) {
-                const proms = promotionsSnapshot.val();
-                // Convierte objeto a array
-                promotions = [];
-                if (proms) {
-                    Object.keys(proms).forEach(key => {
-                        promotions.push({ 
-                            firebaseKey: key,
-                            id: proms[key].id || key,
-                            ...proms[key] 
-                        });
-                    });
-                }
-                console.log("Promociones cargadas desde Firebase:", promotions.length);
-            }
+            const promotionsSnapshot = await database.ref('promociones').once('value');
+            const proms = promotionsSnapshot.val();
+            promotions = firebaseObjectToArray(proms);
+            console.log("Promociones cargadas desde Firebase:", promotions.length);
         } catch (promoError) {
             console.log("No hay promociones en Firebase:", promoError);
             promotions = [];
         }
         
         // Cargar slides
-        const slidesSnapshot = await db.getSlides();
-        if (slidesSnapshot.exists()) {
-            const sls = slidesSnapshot.val();
-            // Convierte objeto a array
-            heroSlides = [];
-            if (sls) {
-                Object.keys(sls).forEach(key => {
-                    heroSlides.push({ 
-                        firebaseKey: key,
-                        id: sls[key].id || key,
-                        ...sls[key] 
-                    });
-                });
-            }
-            console.log("Slides cargados desde Firebase:", heroSlides.length);
-        }
+        const slidesSnapshot = await database.ref('slides').once('value');
+        const sls = slidesSnapshot.val();
+        heroSlides = firebaseObjectToArray(sls);
+        console.log("Slides cargados desde Firebase:", heroSlides.length);
         
     } catch (error) {
         console.error("Error cargando datos desde Firebase:", error);
@@ -241,7 +244,8 @@ async function loadAllDataFromFirebase() {
 // Guardar configuración de la tienda en Firebase
 async function saveStoreDataToFirebase() {
     try {
-        await db.saveStoreData(storeData);
+        const database = firebase.database();
+        await database.ref('tienda').set(storeData);
         console.log("Datos de tienda guardados en Firebase");
         return true;
     } catch (error) {
@@ -253,6 +257,7 @@ async function saveStoreDataToFirebase() {
 // Guardar categoría en Firebase
 async function saveCategoryToFirebase(category) {
     try {
+        const database = firebase.database();
         // Si tenemos una clave de Firebase existente, usarla
         const key = category.firebaseKey || category.id;
         const categoryData = {
@@ -261,7 +266,7 @@ async function saveCategoryToFirebase(category) {
             image: category.image
         };
         
-        await db.saveCategory(key, categoryData);
+        await database.ref('categorias/' + key).set(categoryData);
         console.log("Categoría guardada en Firebase:", key);
         return true;
     } catch (error) {
@@ -273,6 +278,7 @@ async function saveCategoryToFirebase(category) {
 // Guardar producto en Firebase
 async function saveProductToFirebase(product) {
     try {
+        const database = firebase.database();
         // Si tenemos una clave de Firebase existente, usarla
         const key = product.firebaseKey || product.id;
         const productData = {
@@ -285,7 +291,7 @@ async function saveProductToFirebase(product) {
             images: product.images
         };
         
-        await db.saveProduct(key, productData);
+        await database.ref('productos/' + key).set(productData);
         console.log("Producto guardado en Firebase:", key);
         return true;
     } catch (error) {
@@ -297,6 +303,7 @@ async function saveProductToFirebase(product) {
 // Guardar promoción en Firebase
 async function savePromotionToFirebase(promotion) {
     try {
+        const database = firebase.database();
         // Si tenemos una clave de Firebase existente, usarla
         const key = promotion.firebaseKey || promotion.id;
         const promotionData = {
@@ -306,7 +313,7 @@ async function savePromotionToFirebase(promotion) {
             active: promotion.active || true
         };
         
-        await db.savePromotion(key, promotionData);
+        await database.ref('promociones/' + key).set(promotionData);
         console.log("Promoción guardada en Firebase:", key);
         return true;
     } catch (error) {
@@ -318,6 +325,7 @@ async function savePromotionToFirebase(promotion) {
 // Guardar slide en Firebase
 async function saveSlideToFirebase(slide) {
     try {
+        const database = firebase.database();
         // Si tenemos una clave de Firebase existente, usarla
         const key = slide.firebaseKey || slide.id;
         const slideData = {
@@ -327,7 +335,7 @@ async function saveSlideToFirebase(slide) {
             image: slide.image
         };
         
-        await db.saveSlide(key, slideData);
+        await database.ref('slides/' + key).set(slideData);
         console.log("Slide guardado en Firebase:", key);
         return true;
     } catch (error) {
@@ -360,10 +368,30 @@ async function uploadImageToFirebase(file, type, productId = null) {
         
         console.log("Subiendo imagen a Firebase Storage:", file.name, "en ruta:", path);
         
-        const downloadURL = await storageFunctions.uploadImage(file, path);
-        console.log("Imagen subida exitosamente. URL:", downloadURL);
+        const storageRef = firebase.storage().ref();
+        const uploadRef = storageRef.child(path + '/' + Date.now() + '_' + file.name);
+        const uploadTask = uploadRef.put(file);
         
-        return downloadURL;
+        return new Promise((resolve, reject) => {
+            uploadTask.on('state_changed',
+                (snapshot) => {
+                    // Progreso de la subida
+                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                    console.log('Upload is ' + progress + '% done');
+                },
+                (error) => {
+                    // Error
+                    reject(error);
+                },
+                () => {
+                    // Completado
+                    uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+                        resolve(downloadURL);
+                    });
+                }
+            );
+        });
+        
     } catch (error) {
         console.error("Error subiendo imagen a Firebase:", error);
         throw error;
@@ -373,11 +401,12 @@ async function uploadImageToFirebase(file, type, productId = null) {
 // Eliminar categoría de Firebase
 async function deleteCategoryFromFirebase(categoryId) {
     try {
+        const database = firebase.database();
         // Buscar la categoría para obtener la clave de Firebase
         const category = categories.find(c => c.id === categoryId || c.firebaseKey === categoryId);
         const key = category?.firebaseKey || categoryId;
         
-        await db.deleteCategory(key);
+        await database.ref('categorias/' + key).remove();
         console.log("Categoría eliminada de Firebase:", key);
         return true;
     } catch (error) {
@@ -389,11 +418,12 @@ async function deleteCategoryFromFirebase(categoryId) {
 // Eliminar producto de Firebase
 async function deleteProductFromFirebase(productId) {
     try {
+        const database = firebase.database();
         // Buscar el producto para obtener la clave de Firebase
         const product = products.find(p => p.id === productId || p.firebaseKey === productId);
         const key = product?.firebaseKey || productId;
         
-        await db.deleteProduct(key);
+        await database.ref('productos/' + key).remove();
         console.log("Producto eliminado de Firebase:", key);
         return true;
     } catch (error) {
@@ -405,11 +435,12 @@ async function deleteProductFromFirebase(productId) {
 // Eliminar promoción de Firebase
 async function deletePromotionFromFirebase(promotionId) {
     try {
+        const database = firebase.database();
         // Buscar la promoción para obtener la clave de Firebase
         const promotion = promotions.find(p => p.id === promotionId || p.firebaseKey === promotionId);
         const key = promotion?.firebaseKey || promotionId;
         
-        await db.deletePromotion(key);
+        await database.ref('promociones/' + key).remove();
         console.log("Promoción eliminada de Firebase:", key);
         return true;
     } catch (error) {
@@ -421,11 +452,12 @@ async function deletePromotionFromFirebase(promotionId) {
 // Eliminar slide de Firebase
 async function deleteSlideFromFirebase(slideId) {
     try {
+        const database = firebase.database();
         // Buscar el slide para obtener la clave de Firebase
         const slide = heroSlides.find(s => s.id === slideId || s.firebaseKey === slideId);
         const key = slide?.firebaseKey || slideId;
         
-        await db.deleteSlide(key);
+        await database.ref('slides/' + key).remove();
         console.log("Slide eliminado de Firebase:", key);
         return true;
     } catch (error) {
