@@ -481,7 +481,7 @@ function renderProducts(filter = 'all') {
         productCard.setAttribute('data-id', product.id);
         
         // Verificar si el producto está en el carrito
-        const inCart = cart.some(item => item.id === product.id);
+        const inCart = cart.some(item => item.id == product.id);
         
         productCard.innerHTML = `
             <div class="product-image">
@@ -562,6 +562,7 @@ function renderHeroSlides() {
 function openProductModal(productId) {
     console.log("Abriendo modal para producto ID:", productId);
     
+    // NO usar parseInt - los IDs de Firebase son strings
     const product = products.find(p => p.id == productId);
     if (!product) {
         console.error("Producto no encontrado:", productId);
@@ -633,13 +634,14 @@ function openProductModal(productId) {
 function addToCart(productId, quantity = 1) {
     console.log("Agregando al carrito producto ID:", productId, "cantidad:", quantity);
     
+    // NO usar parseInt - los IDs de Firebase son strings
     const product = products.find(p => p.id == productId);
     if (!product) {
         console.error("Producto no encontrado:", productId);
         return;
     }
     
-    const existingItem = cart.find(item => item.id === productId);
+    const existingItem = cart.find(item => item.id == productId);
     
     if (existingItem) {
         existingItem.quantity += quantity;
@@ -720,7 +722,8 @@ function updateCart() {
 function updateCartItemQuantity(productId, change) {
     console.log("Actualizando cantidad producto ID:", productId, "cambio:", change);
     
-    const item = cart.find(item => item.id === productId);
+    // NO usar parseInt - los IDs de Firebase son strings
+    const item = cart.find(item => item.id == productId);
     if (!item) return;
     
     item.quantity += change;
@@ -737,7 +740,8 @@ function updateCartItemQuantity(productId, change) {
 function removeFromCart(productId) {
     console.log("Eliminando del carrito producto ID:", productId);
     
-    cart = cart.filter(item => item.id !== productId);
+    // NO usar parseInt - los IDs de Firebase son strings
+    cart = cart.filter(item => item.id != productId);
     updateCart();
     saveCartToLocalStorage();
     
@@ -914,7 +918,8 @@ function initEvents() {
     if (modalAddToCartBtn) {
         modalAddToCartBtn.addEventListener('click', function(e) {
             e.stopPropagation();
-            const productId = parseInt(this.getAttribute('data-id'));
+            // NO usar parseInt - los IDs de Firebase son strings
+            const productId = this.getAttribute('data-id');
             const quantityInput = document.getElementById('modal-quantity');
             const quantity = quantityInput ? parseInt(quantityInput.value) : 1;
             
@@ -1039,7 +1044,8 @@ function setupEventDelegation() {
         if (viewBtn) {
             e.preventDefault();
             e.stopPropagation();
-            const productId = parseInt(viewBtn.getAttribute('data-id'));
+            // NO usar parseInt - los IDs de Firebase son strings
+            const productId = viewBtn.getAttribute('data-id');
             console.log("Clic en ver detalles:", productId);
             openProductModal(productId);
         }
@@ -1049,7 +1055,8 @@ function setupEventDelegation() {
         if (addToCartBtn) {
             e.preventDefault();
             e.stopPropagation();
-            const productId = parseInt(addToCartBtn.getAttribute('data-id'));
+            // NO usar parseInt - los IDs de Firebase son strings
+            const productId = addToCartBtn.getAttribute('data-id');
             console.log("Clic en agregar al carrito:", productId);
             addToCart(productId);
             addToCartBtn.textContent = 'En el carrito';
@@ -1060,7 +1067,8 @@ function setupEventDelegation() {
         const decreaseBtn = e.target.closest('.decrease-quantity');
         if (decreaseBtn) {
             e.stopPropagation();
-            const productId = parseInt(decreaseBtn.getAttribute('data-id'));
+            // NO usar parseInt - los IDs de Firebase son strings
+            const productId = decreaseBtn.getAttribute('data-id');
             console.log("Disminuir cantidad:", productId);
             updateCartItemQuantity(productId, -1);
         }
@@ -1069,7 +1077,8 @@ function setupEventDelegation() {
         const increaseBtn = e.target.closest('.increase-quantity');
         if (increaseBtn) {
             e.stopPropagation();
-            const productId = parseInt(increaseBtn.getAttribute('data-id'));
+            // NO usar parseInt - los IDs de Firebase son strings
+            const productId = increaseBtn.getAttribute('data-id');
             console.log("Aumentar cantidad:", productId);
             updateCartItemQuantity(productId, 1);
         }
@@ -1078,7 +1087,8 @@ function setupEventDelegation() {
         const removeBtn = e.target.closest('.remove-item');
         if (removeBtn) {
             e.stopPropagation();
-            const productId = parseInt(removeBtn.getAttribute('data-id'));
+            // NO usar parseInt - los IDs de Firebase son strings
+            const productId = removeBtn.getAttribute('data-id');
             console.log("Eliminar producto:", productId);
             removeFromCart(productId);
         }
@@ -1137,7 +1147,7 @@ function performSearch() {
         productCard.className = 'product-card';
         productCard.setAttribute('data-id', product.id);
         
-        const inCart = cart.some(item => item.id === product.id);
+        const inCart = cart.some(item => item.id == product.id);
         
         productCard.innerHTML = `
             <div class="product-image">
