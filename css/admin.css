@@ -3,6 +3,7 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent !important;
 }
 
 body {
@@ -11,6 +12,10 @@ body {
     color: #333;
     line-height: 1.6;
     min-height: 100vh;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    width: 100% !important;
+    position: relative !important;
 }
 
 .container {
@@ -18,6 +23,15 @@ body {
     max-width: 1400px;
     margin: 0 auto;
     padding: 0 20px;
+    overflow-x: hidden !important;
+}
+
+/* Prevenir scroll cuando modales están abiertos */
+body.modal-open {
+    overflow: hidden !important;
+    position: fixed !important;
+    width: 100% !important;
+    height: 100% !important;
 }
 
 /* Header del admin */
@@ -27,6 +41,7 @@ body {
     flex-direction: column;
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
+    overflow-x: hidden !important;
 }
 
 .admin-header {
@@ -104,6 +119,7 @@ body {
     flex-grow: 1;
     padding: 30px 0;
     background: #f8f9fa;
+    overflow-x: hidden !important;
 }
 
 .admin-section {
@@ -365,6 +381,9 @@ body {
     overflow: hidden;
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
     border: 1px solid #e0e0e0;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .admin-table {
@@ -835,6 +854,21 @@ body {
     60% {transform: translateY(-3px);}
 }
 
+/* ==========================================
+   CORRECCIONES MÓVILES CRÍTICAS
+   ========================================== */
+
+/* Asegurar inputs tappables en móviles */
+@media (max-width: 768px) {
+    .form-group input, 
+    .form-group textarea, 
+    .form-group select {
+        font-size: 16px !important; /* Previene zoom en iOS */
+        min-height: 44px !important;
+        padding: 16px !important;
+    }
+}
+
 /* Responsive */
 @media (max-width: 1200px) {
     .container {
@@ -860,6 +894,55 @@ body {
 }
 
 @media (max-width: 768px) {
+    /* Corregir modales en móviles */
+    .admin-modal {
+        padding: 10px !important;
+        align-items: flex-start !important;
+        padding-top: 40px !important;
+        background: rgba(0, 0, 0, 0.95) !important;
+    }
+    
+    .modal-content {
+        width: 95% !important;
+        max-width: 95% !important;
+        max-height: 85vh !important;
+        margin: 0 auto !important;
+        border-radius: 12px !important;
+    }
+    
+    .modal-body {
+        padding: 20px !important;
+        max-height: calc(85vh - 150px) !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Asegurar que los botones sean tappables */
+    .save-modal-btn, .cancel-btn, .delete-confirm-btn,
+    .edit-btn, .delete-btn, .nav-btn, .back-btn,
+    .add-btn, .save-btn, .upload-btn {
+        min-height: 44px !important;
+        min-width: 44px !important;
+        padding: 14px 20px !important;
+        font-size: 16px !important;
+        touch-action: manipulation;
+    }
+    
+    /* Corregir tablas */
+    .admin-table-container {
+        width: 100vw;
+        margin-left: -20px;
+        margin-right: -20px;
+        border-radius: 0 !important;
+        border-left: none;
+        border-right: none;
+    }
+    
+    .admin-table {
+        min-width: 100% !important;
+    }
+    
+    /* Navegación responsive */
     .admin-nav {
         flex-direction: column;
         align-items: stretch;
@@ -871,6 +954,7 @@ body {
         justify-content: center;
     }
     
+    /* Formularios responsive */
     .form-row {
         grid-template-columns: 1fr;
         gap: 0;
@@ -885,41 +969,25 @@ body {
         padding: 14px;
     }
     
+    /* Botones de acción responsive */
     .action-buttons {
         flex-direction: column;
     }
     
+    /* Cards responsive */
     .promotion-cards, .slide-cards {
         grid-template-columns: 1fr;
     }
     
+    /* Tablas responsive */
     .admin-table {
         display: block;
         overflow-x: auto;
         white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
     }
     
-    .admin-modal {
-        padding: 10px;
-    }
-    
-    .modal-content {
-        max-height: 90vh;
-        border-radius: 12px;
-    }
-    
-    .modal-body {
-        padding: 20px;
-    }
-    
-    .modal-header {
-        padding: 20px 20px 15px;
-    }
-    
-    .modal-header h3 {
-        font-size: 20px;
-    }
-    
+    /* Footer de modal responsive */
     .modal-footer {
         padding: 20px;
         flex-direction: column;
@@ -929,21 +997,33 @@ body {
         width: 100%;
     }
     
+    /* Notificaciones responsive */
     .admin-notification {
         left: 20px;
         right: 20px;
         bottom: 20px;
         max-width: none;
     }
+    
+    /* Header responsive */
+    .admin-header h1 {
+        font-size: 22px;
+    }
+    
+    /* Formularios responsive */
+    .admin-form {
+        padding: 20px;
+    }
+    
+    /* Cards containers */
+    .promotions-container, .slides-container {
+        padding: 20px;
+    }
 }
 
 @media (max-width: 576px) {
     .admin-section h2 {
         font-size: 20px;
-    }
-    
-    .admin-form {
-        padding: 20px;
     }
     
     .modal-content {
@@ -955,13 +1035,17 @@ body {
     }
     
     .nav-btn, .back-btn {
-        padding: 10px 15px;
+        padding: 12px 15px;
         font-size: 14px;
     }
     
     .add-btn, .save-btn {
-        padding: 12px 20px;
+        padding: 14px 20px;
         font-size: 14px;
+    }
+    
+    .admin-table td, .admin-table th {
+        padding: 12px 15px;
     }
 }
 
@@ -1009,4 +1093,16 @@ body {
 .char-count.error {
     color: #f44336;
     font-weight: bold;
+}
+
+/* Mejorar touch actions */
+button, [role="button"], .nav-btn, .back-btn {
+    touch-action: manipulation !important;
+}
+
+/* Corrección para iOS */
+@supports (-webkit-touch-callout: none) {
+    .admin-modal {
+        height: -webkit-fill-available !important;
+    }
 }
