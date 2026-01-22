@@ -1,4 +1,4 @@
-// script-firebase.js - OPTIMIZADO Y CORREGIDO
+// script-firebase.js - OPTIMIZADO PARA MÓVILES
 // Tienda principal con Firebase Realtime Database
 
 // Datos iniciales
@@ -172,99 +172,111 @@ async function loadFirebaseSDK() {
     });
 }
 
-// Configurar acceso al admin - MEJORADO PARA MÓVILES
+// Configurar acceso al admin - MEJORADO Y SIMPLIFICADO
 function setupAdminAccess() {
     console.log("Configurando acceso al admin...");
     
-    // Solo activar en la página principal (no en admin)
+    // Solo activar en la página principal
     if (window.location.pathname.includes('admin.html')) {
-        console.log("Estás en admin, no se activa el acceso");
         return;
     }
     
-    // Crear input oculto si no existe
-    if (!document.getElementById('admin-access-input')) {
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.id = 'admin-access-input';
-        input.className = 'hidden-input';
-        input.placeholder = 'Escribe aquí para acceder al admin';
-        document.body.appendChild(input);
-        adminAccessInput = input;
-    } else {
-        adminAccessInput = document.getElementById('admin-access-input');
-    }
+    // Crear un botón flotante para acceso admin en móviles
+    const adminBtn = document.createElement('button');
+    adminBtn.id = 'mobile-admin-btn';
+    adminBtn.innerHTML = '<i class="fas fa-lock"></i>';
+    adminBtn.title = 'Acceso Administrador';
+    document.body.appendChild(adminBtn);
     
-    // Función para manejar la entrada
-    function handleAdminInput(e) {
-        // Solo procesar si es una letra
-        if (e.key.length === 1 && /[a-zA-Z]/.test(e.key)) {
-            adminInputSequence += e.key.toLowerCase();
-            
-            // Mantener solo el largo de la contraseña
-            if (adminInputSequence.length > ADMIN_PASSWORD.length) {
-                adminInputSequence = adminInputSequence.substring(1);
-            }
-            
-            console.log("Secuencia admin actual:", adminInputSequence);
-            
-            // Verificar si coincide
-            if (adminInputSequence === ADMIN_PASSWORD) {
-                console.log("¡Contraseña correcta! Redirigiendo al admin...");
-                // Redireccionar al admin
-                window.location.href = 'admin.html';
-                adminInputSequence = ''; // Resetear
-            }
+    // Estilos del botón
+    adminBtn.style.cssText = `
+        position: fixed;
+        bottom: 80px;
+        right: 15px;
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, #C5A451 0%, #d4b668 100%);
+        color: #000;
+        border: none;
+        border-radius: 50%;
+        z-index: 1002;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(197, 164, 81, 0.4);
+        opacity: 0.3;
+        transition: opacity 0.3s;
+    `;
+    
+    // Mostrar al pasar el mouse/tocar
+    adminBtn.addEventListener('mouseenter', () => {
+        adminBtn.style.opacity = '1';
+    });
+    adminBtn.addEventListener('mouseleave', () => {
+        adminBtn.style.opacity = '0.3';
+    });
+    
+    // Para móviles: mostrar completamente al tocar
+    adminBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        adminBtn.style.opacity = '1';
+        setTimeout(() => {
+            adminBtn.style.opacity = '0.3';
+        }, 1000);
+    });
+    
+    // Evento para activar acceso admin (3 clics)
+    let adminClickCount = 0;
+    let lastAdminClickTime = 0;
+    
+    adminBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const currentTime = new Date().getTime();
+        
+        // Si pasó más de 1 segundo, reiniciar contador
+        if (currentTime - lastAdminClickTime > 1000) {
+            adminClickCount = 0;
         }
-    }
+        
+        adminClickCount++;
+        lastAdminClickTime = currentTime;
+        
+        console.log(`Clic admin: ${adminClickCount}/3`);
+        
+        if (adminClickCount >= 3) {
+            const password = prompt('Ingrese la contraseña de administrador:');
+            if (password === ADMIN_PASSWORD) {
+                window.location.href = 'admin.html';
+            } else {
+                alert('Contraseña incorrecta');
+            }
+            adminClickCount = 0;
+        }
+    });
     
-    // Eventos para desktop (keydown)
+    // También mantener el método por teclado para desktop
     document.addEventListener('keydown', function(e) {
-        // Evitar que funcione cuando se está escribiendo en campos de texto visibles
         const activeElement = document.activeElement;
         const isVisibleInput = activeElement.tagName === 'INPUT' || 
                               activeElement.tagName === 'TEXTAREA';
         
-        // Solo si no es un campo de texto visible
-        if (!isVisibleInput || activeElement === adminAccessInput) {
-            handleAdminInput(e);
+        if (!isVisibleInput && e.key.length === 1 && /[a-zA-Z]/.test(e.key)) {
+            adminInputSequence += e.key.toLowerCase();
+            
+            if (adminInputSequence.length > ADMIN_PASSWORD.length) {
+                adminInputSequence = adminInputSequence.substring(1);
+            }
+            
+            if (adminInputSequence === ADMIN_PASSWORD) {
+                window.location.href = 'admin.html';
+                adminInputSequence = '';
+            }
         }
     });
-    
-    // Eventos para móviles (input en campo oculto)
-    if (adminAccessInput) {
-        adminAccessInput.addEventListener('input', function(e) {
-            const value = this.value.toLowerCase();
-            
-            // Verificar si la contraseña está contenida en el texto ingresado
-            if (value.includes(ADMIN_PASSWORD)) {
-                console.log("¡Contraseña detectada! Redirigiendo al admin...");
-                // Redireccionar al admin
-                window.location.href = 'admin.html';
-                this.value = ''; // Limpiar campo
-            }
-            
-            // Mantener el campo corto para mejor rendimiento
-            if (this.value.length > ADMIN_PASSWORD.length * 2) {
-                this.value = this.value.slice(-ADMIN_PASSWORD.length * 2);
-            }
-        });
-        
-        // Permitir que el campo reciba foco cuando se toca la pantalla
-        document.addEventListener('touchstart', function(e) {
-            // Solo si no se toca un elemento interactivo
-            if (!e.target.closest('button, a, input, select, textarea')) {
-                adminAccessInput.focus();
-            }
-        });
-        
-        // Enfocar automáticamente al cargar en móviles
-        if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-            setTimeout(() => {
-                adminAccessInput.focus();
-            }, 1000);
-        }
-    }
 }
 
 // Inicializar referencias a elementos del DOM
@@ -286,13 +298,11 @@ function initializeDOMElements() {
     closeProductModal = document.getElementById('close-product-modal');
     searchInput = document.getElementById('search-input');
     searchButton = document.getElementById('search-button');
-    adminAccessInput = document.getElementById('admin-access-input');
     
     console.log("Elementos DOM inicializados:", {
         sidebar: !!sidebar,
         cartSidebar: !!cartSidebar,
-        productModal: !!productModal,
-        adminAccessInput: !!adminAccessInput
+        productModal: !!productModal
     });
 }
 
@@ -565,7 +575,7 @@ function renderProducts(filter = 'all') {
         productCard.innerHTML = `
             <div class="product-image">
                 <img src="${firstImage}" alt="${product.name}" loading="lazy" 
-                     onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22600%22%3E%3Crect width=%22600%22 height=%22600%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%22300%22 y=%22300%22 font-family=%22Arial%22 font-size=%2218%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 fill=%22%23666%22%3E${encodeURIComponent(product.name)}%3C/text%3E%3C/svg%3E';">
+                     onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22600%22%3E%3Crect width=%22600%22 height=%22600%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%22300%22 y=%22300%22 font-family=%22Arial%22 font-size=%2218%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 fill=%22%23666%22%3E${encodeURIComponent(product.name)}%3C/text%3E%3C/svg%3E';">">
                 <div class="product-overlay">
                     <button class="view-product" data-id="${product.id}">Ver Detalles</button>
                 </div>
@@ -805,7 +815,7 @@ function updateCart() {
             cartItem.className = 'cart-item';
             cartItem.innerHTML = `
                 <img src="${item.image}" alt="${item.name}" class="cart-item-image" 
-                     onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%2250%22 y=%2250%22 font-family=%22Arial%22 font-size=%2212%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 fill=%22%23666%22%3E${encodeURIComponent(item.name)}%3C/text%3E%3C/svg%3E';">
+                     onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%2250%22 y=%2250%22 font-family=%22Arial%22 font-size=%2212%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 fill=%22%23666%22%3E${encodeURIComponent(item.name)}%3C/text%3E%3C/svg%3E';">">
                 <div class="cart-item-details">
                     <h4 class="cart-item-title">${item.name}</h4>
                     <p class="cart-item-price">$${(item.price * (item.quantity || 1)).toFixed(2)}</p>
@@ -966,37 +976,30 @@ function showNotification(message, type = 'success') {
     }, 3000);
 }
 
-// Inicializar eventos
+// Inicializar eventos optimizados para móviles
 function initEvents() {
-    console.log("Inicializando eventos con prevención de clics rápidos...");
+    console.log("Inicializando eventos optimizados para móviles...");
     
-    // Función para prevenir clics rápidos
-    function preventFastClicks(e) {
-        const currentTime = new Date().getTime();
-        const timeSinceLastClick = currentTime - lastClickTime;
-        
-        if (timeSinceLastClick < CLICK_DELAY) {
+    // Función para manejar toques/clics de manera unificada
+    function handleInteraction(element, callback) {
+        element.addEventListener('touchstart', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            console.log("Clic rápido prevenido");
-            return true;
-        }
+            callback(e);
+        }, { passive: false });
         
-        lastClickTime = currentTime;
-        return false;
+        element.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            callback(e);
+        });
     }
     
-    // Sidebar con prevención de clics rápidos
+    // Sidebar
     if (menuToggle) {
-        menuToggle.addEventListener('click', function(e) {
-            if (preventFastClicks(e)) return;
-            
-            e.stopPropagation();
+        handleInteraction(menuToggle, function(e) {
             console.log("Abriendo sidebar");
-            
-            // Añadir clase al body
             document.body.classList.add('sidebar-open');
-            
             if (sidebar) sidebar.classList.add('open');
             if (overlay) {
                 overlay.classList.add('active');
@@ -1006,15 +1009,9 @@ function initEvents() {
     }
     
     if (closeSidebar) {
-        closeSidebar.addEventListener('click', function(e) {
-            if (preventFastClicks(e)) return;
-            
-            e.stopPropagation();
+        handleInteraction(closeSidebar, function(e) {
             console.log("Cerrando sidebar");
-            
-            // Remover clase del body
             document.body.classList.remove('sidebar-open');
-            
             if (sidebar) sidebar.classList.remove('open');
             if (overlay) {
                 overlay.classList.remove('active');
@@ -1023,58 +1020,34 @@ function initEvents() {
         });
     }
     
-    // Carrito con prevención de clics rápidos
+    // Carrito
     if (cartBtn) {
-        cartBtn.addEventListener('click', function(e) {
-            if (preventFastClicks(e)) return;
-            
-            e.stopPropagation();
+        handleInteraction(cartBtn, function(e) {
             console.log("Abriendo carrito");
-            
-            // Añadir clase al body
             document.body.classList.add('cart-open');
-            
             if (cartSidebar) cartSidebar.classList.add('open');
         });
     }
     
     if (closeCart) {
-        closeCart.addEventListener('click', function(e) {
-            if (preventFastClicks(e)) return;
-            
-            e.stopPropagation();
+        handleInteraction(closeCart, function(e) {
             console.log("Cerrando carrito");
-            
-            // Remover clase del body
             document.body.classList.remove('cart-open');
-            
             if (cartSidebar) cartSidebar.classList.remove('open');
         });
     }
     
     // Overlay - cierra todo
     if (overlay) {
-        overlay.addEventListener('click', function(e) {
-            if (preventFastClicks(e)) return;
-            
+        handleInteraction(overlay, function(e) {
             console.log("Clic en overlay, cerrando todo");
             closeAllModals();
         });
-        
-        // Prevenir scroll en overlay
-        overlay.addEventListener('touchmove', function(e) {
-            if (overlay.classList.contains('active')) {
-                e.preventDefault();
-            }
-        }, { passive: false });
     }
     
     // Modal de producto
     if (closeProductModal) {
-        closeProductModal.addEventListener('click', function(e) {
-            if (preventFastClicks(e)) return;
-            
-            e.stopPropagation();
+        handleInteraction(closeProductModal, function(e) {
             console.log("Cerrando modal de producto");
             closeProductModalFunc();
         });
@@ -1083,39 +1056,33 @@ function initEvents() {
     // Cerrar modal al hacer clic fuera
     if (productModal) {
         productModal.addEventListener('click', function(e) {
-            if (preventFastClicks(e)) return;
-            
             if (e.target === productModal) {
                 console.log("Clic fuera del modal, cerrando");
                 closeProductModalFunc();
             }
         });
-        
-        // Prevenir scroll en modal
-        productModal.addEventListener('touchmove', function(e) {
-            if (productModal.style.display === 'flex') {
-                e.stopPropagation();
-            }
-        }, { passive: false });
     }
     
     // Buscador
     if (searchButton) {
-        searchButton.addEventListener('click', function(e) {
-            if (preventFastClicks(e)) return;
-            
-            e.stopPropagation();
+        handleInteraction(searchButton, function(e) {
             performSearch();
+        });
+    }
+    
+    // Input de búsqueda - permitir enter
+    if (searchInput) {
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
         });
     }
     
     // Agregar al carrito desde el modal
     const modalAddToCartBtn = document.getElementById('modal-add-to-cart');
     if (modalAddToCartBtn) {
-        modalAddToCartBtn.addEventListener('click', function(e) {
-            if (preventFastClicks(e)) return;
-            
-            e.stopPropagation();
+        handleInteraction(modalAddToCartBtn, function(e) {
             const productId = this.getAttribute('data-id');
             const quantityInput = document.getElementById('modal-quantity');
             const quantity = quantityInput ? parseInt(quantityInput.value) || 1 : 1;
@@ -1127,15 +1094,12 @@ function initEvents() {
         });
     }
     
-    // Botones de cantidad
+    // Botones de cantidad en modal
     const minusBtn = document.querySelector('.quantity-btn.minus');
     const plusBtn = document.querySelector('.quantity-btn.plus');
     
     if (minusBtn) {
-        minusBtn.addEventListener('click', function(e) {
-            if (preventFastClicks(e)) return;
-            
-            e.stopPropagation();
+        handleInteraction(minusBtn, function(e) {
             const quantityInput = document.getElementById('modal-quantity');
             if (quantityInput && quantityInput.value > 1) {
                 quantityInput.value = parseInt(quantityInput.value) - 1;
@@ -1144,10 +1108,7 @@ function initEvents() {
     }
     
     if (plusBtn) {
-        plusBtn.addEventListener('click', function(e) {
-            if (preventFastClicks(e)) return;
-            
-            e.stopPropagation();
+        handleInteraction(plusBtn, function(e) {
             const quantityInput = document.getElementById('modal-quantity');
             if (quantityInput && quantityInput.value < 10) {
                 quantityInput.value = parseInt(quantityInput.value) + 1;
@@ -1155,201 +1116,122 @@ function initEvents() {
         });
     }
     
-    // Configurar delegación de eventos con prevención de clics rápidos
-    setupEventDelegation(preventFastClicks);
+    // Botón de checkout
+    if (checkoutBtn) {
+        handleInteraction(checkoutBtn, function(e) {
+            completeOrder();
+        });
+    }
     
-    // Prevenir scroll no deseado en móviles
-    setupScrollPrevention();
+    // Configurar delegación de eventos optimizada
+    setupEventDelegation();
     
-    console.log("Eventos inicializados con prevención de clics rápidos");
+    console.log("Eventos inicializados correctamente");
 }
 
-// Nueva función para prevenir scroll no deseado
-function setupScrollPrevention() {
-    // Prevenir scroll cuando hay elementos abiertos
-    document.addEventListener('touchmove', function(e) {
-        const isSidebarOpen = sidebar && sidebar.classList.contains('open');
-        const isCartOpen = cartSidebar && cartSidebar.classList.contains('open');
-        const isModalOpen = productModal && productModal.style.display === 'flex';
-        
-        if (isSidebarOpen || isCartOpen || isModalOpen) {
-            // Permitir scroll solo en el elemento abierto
-            const target = e.target;
-            const isScrollableElement = 
-                target.closest('.sidebar-content') ||
-                target.closest('.cart-items') ||
-                target.closest('.product-modal-content');
-            
-            if (!isScrollableElement) {
-                e.preventDefault();
-            }
-        }
-    }, { passive: false });
+// Configurar delegación de eventos SIMPLIFICADA
+function setupEventDelegation() {
+    console.log("Configurando delegación de eventos simplificada...");
     
-    // Detectar scroll para evitar conflictos con clics
-    window.addEventListener('scroll', function() {
-        isScrolling = true;
-        
-        clearTimeout(scrollTimeout);
-        scrollTimeout = setTimeout(function() {
-            isScrolling = false;
-        }, 100);
-    });
-}
-
-// Configurar delegación de eventos para elementos dinámicos
-function setupEventDelegation(preventFastClicks) {
-    console.log("Configurando delegación de eventos...");
-    
-    // Función manejadora para eventos
-    function handleEvent(e) {
-        // Prevenir clics durante scroll
-        if (isScrolling) {
+    // Usar un solo event listener para todo
+    document.addEventListener('click', function(e) {
+        // Ver detalles del producto
+        if (e.target.closest('.view-product')) {
             e.preventDefault();
             e.stopPropagation();
-            return;
-        }
-        
-        // Prevenir clics rápidos si se pasa la función
-        if (preventFastClicks && preventFastClicks(e)) {
-            return;
-        }
-        
-        // Categorías
-        const categoryCard = e.target.closest('.category-card');
-        if (categoryCard) {
-            e.preventDefault();
-            e.stopPropagation();
-            const category = categoryCard.getAttribute('data-category');
-            console.log("Clic en categoría:", category);
-            filterProducts(category);
-            
-            // Actualizar botones activos
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            const filterBtn = document.querySelector(`.filter-btn[data-filter="${category}"]`);
-            if (filterBtn) {
-                filterBtn.classList.add('active');
-            }
-            
-            // Cerrar sidebar si está abierto
-            closeAllModals();
-        }
-        
-        // Enlaces de categorías en sidebar
-        const categoryLink = e.target.closest('a[data-category]');
-        if (categoryLink) {
-            e.preventDefault();
-            e.stopPropagation();
-            const category = categoryLink.getAttribute('data-category');
-            console.log("Clic en categoría del sidebar:", category);
-            filterProducts(category);
-            
-            // Actualizar botones activos
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            const filterBtn = document.querySelector(`.filter-btn[data-filter="${category}"]`);
-            if (filterBtn) {
-                filterBtn.classList.add('active');
-            }
-            
-            // Cerrar sidebar
-            closeAllModals();
-        }
-        
-        // Botones de filtro
-        const filterBtn = e.target.closest('.filter-btn');
-        if (filterBtn) {
-            e.preventDefault();
-            e.stopPropagation();
-            const category = filterBtn.getAttribute('data-filter');
-            console.log("Clic en filtro:", category);
-            
-            // Actualizar botones activos
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            filterBtn.classList.add('active');
-            
-            filterProducts(category);
-        }
-        
-        // Productos - Ver detalles
-        const viewBtn = e.target.closest('.view-product');
-        if (viewBtn) {
-            e.preventDefault();
-            e.stopPropagation();
+            const viewBtn = e.target.closest('.view-product');
             const productId = viewBtn.getAttribute('data-id');
             console.log("Clic en ver detalles:", productId);
             openProductModal(productId);
         }
         
-        // Productos - Agregar al carrito (botones en la lista de productos)
-        const addToCartBtn = e.target.closest('.add-to-cart');
-        if (addToCartBtn && !addToCartBtn.disabled) {
+        // Agregar al carrito desde lista
+        else if (e.target.closest('.add-to-cart') && !e.target.closest('.add-to-cart').disabled) {
             e.preventDefault();
             e.stopPropagation();
-            const productId = addToCartBtn.getAttribute('data-id');
-            console.log("Clic en agregar al carrito:", productId);
+            const addBtn = e.target.closest('.add-to-cart');
+            const productId = addBtn.getAttribute('data-id');
+            console.log("Agregar al carrito:", productId);
             addToCart(productId);
-            addToCartBtn.textContent = 'En el carrito';
-            addToCartBtn.disabled = true;
+            addBtn.textContent = 'En el carrito';
+            addBtn.disabled = true;
         }
         
-        // Carrito - Disminuir cantidad
-        const decreaseBtn = e.target.closest('.decrease-quantity');
-        if (decreaseBtn) {
+        // Categorías en sidebar
+        else if (e.target.closest('a[data-category]')) {
+            e.preventDefault();
             e.stopPropagation();
-            const productId = decreaseBtn.getAttribute('data-id');
-            console.log("Disminuir cantidad:", productId);
+            const link = e.target.closest('a[data-category]');
+            const category = link.getAttribute('data-category');
+            console.log("Clic en categoría:", category);
+            filterProducts(category);
+            closeAllModals();
+        }
+        
+        // Categorías en grid
+        else if (e.target.closest('.category-card')) {
+            e.preventDefault();
+            e.stopPropagation();
+            const card = e.target.closest('.category-card');
+            const category = card.getAttribute('data-category');
+            console.log("Clic en categoría card:", category);
+            filterProducts(category);
+        }
+        
+        // Filtros
+        else if (e.target.closest('.filter-btn')) {
+            e.preventDefault();
+            e.stopPropagation();
+            const btn = e.target.closest('.filter-btn');
+            const category = btn.getAttribute('data-filter');
+            console.log("Clic en filtro:", category);
+            
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            filterProducts(category);
+        }
+        
+        // Carrito - acciones
+        else if (e.target.closest('.decrease-quantity')) {
+            e.stopPropagation();
+            const btn = e.target.closest('.decrease-quantity');
+            const productId = btn.getAttribute('data-id');
             updateCartItemQuantity(productId, -1);
         }
         
-        // Carrito - Aumentar cantidad
-        const increaseBtn = e.target.closest('.increase-quantity');
-        if (increaseBtn) {
+        else if (e.target.closest('.increase-quantity')) {
             e.stopPropagation();
-            const productId = increaseBtn.getAttribute('data-id');
-            console.log("Aumentar cantidad:", productId);
+            const btn = e.target.closest('.increase-quantity');
+            const productId = btn.getAttribute('data-id');
             updateCartItemQuantity(productId, 1);
         }
         
-        // Carrito - Eliminar producto
-        const removeBtn = e.target.closest('.remove-item');
-        if (removeBtn) {
+        else if (e.target.closest('.remove-item')) {
             e.stopPropagation();
-            const productId = removeBtn.getAttribute('data-id');
-            console.log("Eliminar producto:", productId);
+            const btn = e.target.closest('.remove-item');
+            const productId = btn.getAttribute('data-id');
             removeFromCart(productId);
         }
+    });
+    
+    // También manejar touchstart para mejor respuesta en móviles
+    document.addEventListener('touchstart', function(e) {
+        // Solo para elementos interactivos
+        const target = e.target;
+        const isInteractive = target.closest('button, a, [onclick], .view-product, .add-to-cart');
         
-        // Enlaces del footer y navegación
-        const footerLink = e.target.closest('a[href^="#"]');
-        if (footerLink && !footerLink.hasAttribute('data-category') && !footerLink.hasAttribute('data-id')) {
-            e.preventDefault();
-            const targetId = footerLink.getAttribute('href').substring(1);
-            const targetElement = document.getElementById(targetId);
-            if (targetElement) {
-                targetElement.scrollIntoView({ behavior: 'smooth' });
+        if (isInteractive) {
+            // Agregar feedback visual
+            const element = target.closest('button, a, .view-product, .add-to-cart');
+            if (element) {
+                element.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    element.style.transform = '';
+                }, 200);
             }
         }
-    }
-    
-    // Usar solo click, no touchstart
-    document.addEventListener('click', handleEvent);
-    
-    // Para móviles, agregar touchstart con prevención
-    document.addEventListener('touchstart', function(e) {
-        // Solo prevenir comportamiento por defecto en elementos interactivos
-        const tag = e.target.tagName.toLowerCase();
-        if (['button', 'a', 'input', 'select'].includes(tag)) {
-            e.preventDefault();
-        }
-    }, { passive: false });
+    }, { passive: true });
 }
 
 // Función para cerrar todos los modales
@@ -1420,7 +1302,7 @@ function performSearch() {
         productCard.innerHTML = `
             <div class="product-image">
                 <img src="${firstImage}" alt="${product.name}" loading="lazy"
-                     onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22600%22%3E%3Crect width=%22600%22 height=%22600%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%22300%22 y=%22300%22 font-family=%22Arial%22 font-size=%2218%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 fill=%22%23666%22%3E${encodeURIComponent(product.name)}%3C/text%3E%3C/svg%3E';">
+                     onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22600%22%3E%3Crect width=%22600%22 height=%22600%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%22300%22 y=%22300%22 font-family=%22Arial%22 font-size=%2218%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 fill=%22%23666%22%3E${encodeURIComponent(product.name)}%3C/text%3E%3C/svg%3E';">">
                 <div class="product-overlay">
                     <button class="view-product" data-id="${product.id}">Ver Detalles</button>
                 </div>
