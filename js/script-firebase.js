@@ -1,4 +1,4 @@
-// script-firebase.js - OPTIMIZADO PARA MÓVILES
+// script-firebase.js - OPTIMIZADO Y CORREGIDO
 // Tienda principal con Firebase Realtime Database
 
 // Datos iniciales
@@ -23,10 +23,15 @@ let scrollTimeout;
 let lastClickTime = 0;
 const CLICK_DELAY = 300; // 300ms entre clics
 
+// Variables para acceso al admin
+let adminInputSequence = '';
+const ADMIN_PASSWORD = 'abuelamia';
+
 // DOM Elements
 let sidebar, overlay, menuToggle, closeSidebar, cartSidebar, cartBtn, closeCart;
 let cartItems, cartTotal, cartCount, checkoutBtn, productModal, closeProductModal;
 let searchInput, searchButton;
+let adminAccessInput;
 
 // Inicializar la aplicación
 document.addEventListener('DOMContentLoaded', async function() {
@@ -34,6 +39,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // Inicializar referencias a elementos del DOM
     initializeDOMElements();
+    
+    // Configurar acceso al admin (DEBE IR ANTES DE CUALQUIER OTRA COSA)
+    setupAdminAccess();
     
     // Inicializar Firebase
     const firebaseInitialized = await initializeFirebase();
@@ -49,9 +57,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         updateCart();
         return;
     }
-    
-    // Configurar acceso invisible al admin
-    setupAdminAccess();
     
     // Cargar datos de Firebase
     await loadDataFromFirebase();
@@ -79,7 +84,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Limpiar placeholders de carga
     setTimeout(() => {
         const loadingElements = document.querySelectorAll('.firebase-loading, .loading-placeholder');
-        loadingElements.forEach(el => el.style.display = 'none');
+        loadingElements.forEach(el => {
+            if (el.parentNode) el.style.display = 'none';
+        });
     }, 1000);
 });
 
@@ -165,11 +172,9 @@ async function loadFirebaseSDK() {
     });
 }
 
-// Configurar acceso invisible al admin
+// Configurar acceso al admin - MEJORADO PARA MÓVILES
 function setupAdminAccess() {
     console.log("Configurando acceso al admin...");
-    let typedSequence = '';
-    const password = 'abuelamia';
     
     // Solo activar en la página principal (no en admin)
     if (window.location.pathname.includes('admin.html')) {
@@ -177,35 +182,89 @@ function setupAdminAccess() {
         return;
     }
     
-    document.addEventListener('keydown', function(e) {
-        // Evitar que funcione cuando se está escribiendo en campos de texto
-        const activeElement = document.activeElement;
-        const isInput = activeElement.tagName === 'INPUT' || 
-                       activeElement.tagName === 'TEXTAREA' || 
-                       activeElement.isContentEditable;
-        
-        if (isInput) return;
-        
-        // Agregar tecla al sequence (solo letras)
+    // Crear input oculto si no existe
+    if (!document.getElementById('admin-access-input')) {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.id = 'admin-access-input';
+        input.className = 'hidden-input';
+        input.placeholder = 'Escribe aquí para acceder al admin';
+        document.body.appendChild(input);
+        adminAccessInput = input;
+    } else {
+        adminAccessInput = document.getElementById('admin-access-input');
+    }
+    
+    // Función para manejar la entrada
+    function handleAdminInput(e) {
+        // Solo procesar si es una letra
         if (e.key.length === 1 && /[a-zA-Z]/.test(e.key)) {
-            typedSequence += e.key.toLowerCase();
+            adminInputSequence += e.key.toLowerCase();
             
             // Mantener solo el largo de la contraseña
-            if (typedSequence.length > password.length) {
-                typedSequence = typedSequence.substring(1);
+            if (adminInputSequence.length > ADMIN_PASSWORD.length) {
+                adminInputSequence = adminInputSequence.substring(1);
             }
             
-            console.log("Secuencia actual:", typedSequence);
+            console.log("Secuencia admin actual:", adminInputSequence);
             
             // Verificar si coincide
-            if (typedSequence === password) {
+            if (adminInputSequence === ADMIN_PASSWORD) {
                 console.log("¡Contraseña correcta! Redirigiendo al admin...");
                 // Redireccionar al admin
                 window.location.href = 'admin.html';
-                typedSequence = ''; // Resetear
+                adminInputSequence = ''; // Resetear
             }
         }
+    }
+    
+    // Eventos para desktop (keydown)
+    document.addEventListener('keydown', function(e) {
+        // Evitar que funcione cuando se está escribiendo en campos de texto visibles
+        const activeElement = document.activeElement;
+        const isVisibleInput = activeElement.tagName === 'INPUT' || 
+                              activeElement.tagName === 'TEXTAREA';
+        
+        // Solo si no es un campo de texto visible
+        if (!isVisibleInput || activeElement === adminAccessInput) {
+            handleAdminInput(e);
+        }
     });
+    
+    // Eventos para móviles (input en campo oculto)
+    if (adminAccessInput) {
+        adminAccessInput.addEventListener('input', function(e) {
+            const value = this.value.toLowerCase();
+            
+            // Verificar si la contraseña está contenida en el texto ingresado
+            if (value.includes(ADMIN_PASSWORD)) {
+                console.log("¡Contraseña detectada! Redirigiendo al admin...");
+                // Redireccionar al admin
+                window.location.href = 'admin.html';
+                this.value = ''; // Limpiar campo
+            }
+            
+            // Mantener el campo corto para mejor rendimiento
+            if (this.value.length > ADMIN_PASSWORD.length * 2) {
+                this.value = this.value.slice(-ADMIN_PASSWORD.length * 2);
+            }
+        });
+        
+        // Permitir que el campo reciba foco cuando se toca la pantalla
+        document.addEventListener('touchstart', function(e) {
+            // Solo si no se toca un elemento interactivo
+            if (!e.target.closest('button, a, input, select, textarea')) {
+                adminAccessInput.focus();
+            }
+        });
+        
+        // Enfocar automáticamente al cargar en móviles
+        if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+            setTimeout(() => {
+                adminAccessInput.focus();
+            }, 1000);
+        }
+    }
 }
 
 // Inicializar referencias a elementos del DOM
@@ -227,11 +286,13 @@ function initializeDOMElements() {
     closeProductModal = document.getElementById('close-product-modal');
     searchInput = document.getElementById('search-input');
     searchButton = document.getElementById('search-button');
+    adminAccessInput = document.getElementById('admin-access-input');
     
     console.log("Elementos DOM inicializados:", {
         sidebar: !!sidebar,
         cartSidebar: !!cartSidebar,
-        productModal: !!productModal
+        productModal: !!productModal,
+        adminAccessInput: !!adminAccessInput
     });
 }
 
@@ -432,9 +493,10 @@ function renderCategories() {
         categoryCard.className = 'category-card';
         categoryCard.setAttribute('data-category', category.id);
         
-        // Imagen con lazy loading para móviles
+        // Imagen con mejor manejo de errores
         const imageHTML = category.image ? 
-            `<img src="${category.image}" alt="${category.name}" loading="lazy" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22300%22%3E%3Crect width=%22600%22 height=%22300%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%22300%22 y=%22150%22 font-family=%22Arial%22 font-size=%2218%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 fill=%22%23666%22%3E${category.name}%3C/text%3E%3C/svg%3E'">` :
+            `<img src="${category.image}" alt="${category.name}" loading="lazy" 
+                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22300%22%3E%3Crect width=%22600%22 height=%22300%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%22300%22 y=%22150%22 font-family=%22Arial%22 font-size=%2218%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 fill=%22%23666%22%3E${encodeURIComponent(category.name)}%3C/text%3E%3C/svg%3E';">` :
             `<div class="placeholder-image">${category.name}</div>`;
         
         categoryCard.innerHTML = `
@@ -496,14 +558,14 @@ function renderProducts(filter = 'all') {
         // Verificar si el producto está en el carrito
         const inCart = cart.some(item => item.id === product.id);
         
-        // Primera imagen o placeholder
+        // Primera imagen con mejor manejo de errores
         const firstImage = product.images && product.images.length > 0 ? product.images[0] : 
-            product.image || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22600%22%3E%3Crect width=%22600%22 height=%22600%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%22300%22 y=%22300%22 font-family=%22Arial%22 font-size=%2218%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 fill=%22%23666%22%3E${product.name}%3C/text%3E%3C/svg%3E';
+            'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22600%22%3E%3Crect width=%22600%22 height=%22600%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%22300%22 y=%22300%22 font-family=%22Arial%22 font-size=%2218%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 fill=%22%23666%22%3EProducto%3C/text%3E%3C/svg%3E';
         
         productCard.innerHTML = `
             <div class="product-image">
                 <img src="${firstImage}" alt="${product.name}" loading="lazy" 
-                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22600%22%3E%3Crect width=%22600%22 height=%22600%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%22300%22 y=%22300%22 font-family=%22Arial%22 font-size=%2218%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 fill=%22%23666%22%3E${product.name}%3C/text%3E%3C/svg%3E'">
+                     onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22600%22%3E%3Crect width=%22600%22 height=%22600%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%22300%22 y=%22300%22 font-family=%22Arial%22 font-size=%2218%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 fill=%22%23666%22%3E${encodeURIComponent(product.name)}%3C/text%3E%3C/svg%3E';">
                 <div class="product-overlay">
                     <button class="view-product" data-id="${product.id}">Ver Detalles</button>
                 </div>
@@ -524,7 +586,7 @@ function renderProducts(filter = 'all') {
         productsGrid.appendChild(productCard);
     });
     
-    console.log("Productos renderizados:", filteredProducts.length);
+    console.log("Productos renderizadas:", filteredProducts.length);
 }
 
 // Filtrar productos por categoría
@@ -586,7 +648,7 @@ function renderHeroSlides() {
     });
 }
 
-// Abrir modal de producto
+// Abrir modal de producto - CORREGIDO
 function openProductModal(productId) {
     console.log("Abriendo modal para producto ID:", productId);
     
@@ -622,9 +684,10 @@ function openProductModal(productId) {
     const mainImage = document.querySelector('.main-image');
     if (mainImage) {
         const firstImage = product.images && product.images.length > 0 ? product.images[0] : 
-            product.image || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22600%22%3E%3Crect width=%22600%22 height=%22600%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%22300%22 y=%22300%22 font-family=%22Arial%22 font-size=%2218%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 fill=%22%23666%22%3E${product.name}%3C/text%3E%3C/svg%3E';
+            'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22600%22%3E%3Crect width=%22600%22 height=%22600%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%22300%22 y=%22300%22 font-family=%22Arial%22 font-size=%2218%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 fill=%22%23666%22%3E${encodeURIComponent(product.name)}%3C/text%3E%3C/svg%3E';
         
-        mainImage.innerHTML = `<img src="${firstImage}" alt="${product.name}" loading="lazy">`;
+        mainImage.innerHTML = `<img src="${firstImage}" alt="${product.name}" loading="lazy" 
+            onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22600%22%3E%3Crect width=%22600%22 height=%22600%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%22300%22 y=%22300%22 font-family=%22Arial%22 font-size=%2218%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 fill=%22%23666%22%3E${encodeURIComponent(product.name)}%3C/text%3E%3C/svg%3E';">`;
     }
     
     const thumbnails = document.getElementById('modal-thumbnails');
@@ -639,7 +702,9 @@ function openProductModal(productId) {
             images.forEach((image, index) => {
                 const thumbnail = document.createElement('div');
                 thumbnail.className = `thumbnail ${index === 0 ? 'active' : ''}`;
-                thumbnail.innerHTML = `<img src="${image}" alt="${product.name} ${index + 1}" loading="lazy">`;
+                thumbnail.innerHTML = `<img src="${image}" alt="${product.name} ${index + 1}" loading="lazy"
+                    onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%2280%22%3E%3Crect width=%2280%22 height=%2280%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%2240%22 y=%2240%22 font-family=%22Arial%22 font-size=%2210%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 fill=%22%23666%22%3EImg ${index + 1}%3C/text%3E%3C/svg%3E';">`;
+                
                 thumbnail.addEventListener('click', () => {
                     // Cambiar imagen principal
                     const mainImg = mainImage.querySelector('img');
@@ -740,7 +805,7 @@ function updateCart() {
             cartItem.className = 'cart-item';
             cartItem.innerHTML = `
                 <img src="${item.image}" alt="${item.name}" class="cart-item-image" 
-                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%2250%22 y=%2250%22 font-family=%22Arial%22 font-size=%2212%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 fill=%22%23666%22%3E${item.name}%3C/text%3E%3C/svg%3E'">
+                     onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%2250%22 y=%2250%22 font-family=%22Arial%22 font-size=%2212%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 fill=%22%23666%22%3E${encodeURIComponent(item.name)}%3C/text%3E%3C/svg%3E';">
                 <div class="cart-item-details">
                     <h4 class="cart-item-title">${item.name}</h4>
                     <p class="cart-item-price">$${(item.price * (item.quantity || 1)).toFixed(2)}</p>
@@ -859,32 +924,31 @@ function completeOrder() {
 function showNotification(message, type = 'success') {
     console.log("Mostrando notificación:", message);
     
+    // Eliminar notificaciones anteriores
+    document.querySelectorAll('.notification').forEach(notification => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+    });
+    
     // Crear elemento de notificación
     const notification = document.createElement('div');
     notification.className = 'notification';
-    notification.textContent = message;
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 15px 20px;
-        border-radius: 8px;
-        color: white;
-        font-weight: bold;
-        z-index: 10000;
-        animation: slideIn 0.3s ease, slideOut 0.3s ease 2.7s;
-        max-width: 300px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    `;
     
-    // Agregar estilo según tipo
+    // Agregar icono según tipo
+    let icon = '';
     if (type === 'error') {
+        icon = '<i class="fas fa-exclamation-circle"></i>';
         notification.style.background = 'linear-gradient(135deg, #ff4444 0%, #ff6666 100%)';
     } else if (type === 'warning') {
+        icon = '<i class="fas fa-exclamation-triangle"></i>';
         notification.style.background = 'linear-gradient(135deg, #ff9800 0%, #ffb74d 100%)';
     } else {
+        icon = '<i class="fas fa-check-circle"></i>';
         notification.style.background = 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)';
     }
+    
+    notification.innerHTML = `${icon} ${message}`;
     
     // Agregar al DOM
     document.body.appendChild(notification);
@@ -892,7 +956,12 @@ function showNotification(message, type = 'success') {
     // Remover después de 3 segundos
     setTimeout(() => {
         if (notification.parentNode) {
-            document.body.removeChild(notification);
+            notification.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    document.body.removeChild(notification);
+                }
+            }, 300);
         }
     }, 3000);
 }
@@ -1346,11 +1415,12 @@ function performSearch() {
         
         const inCart = cart.some(item => item.id == product.id);
         const firstImage = product.images && product.images.length > 0 ? product.images[0] : 
-            product.image || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22600%22%3E%3Crect width=%22600% height=%22600%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%22300%22 y=%22300%22 font-family=%22Arial%22 font-size=%2218%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 fill=%22%23666%22%3E${product.name}%3C/text%3E%3C/svg%3E';
+            'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22600%22%3E%3Crect width=%22600%22 height=%22600%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%22300%22 y=%22300%22 font-family=%22Arial%22 font-size=%2218%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 fill=%22%23666%22%3EProducto%3C/text%3E%3C/svg%3E';
         
         productCard.innerHTML = `
             <div class="product-image">
-                <img src="${firstImage}" alt="${product.name}" loading="lazy">
+                <img src="${firstImage}" alt="${product.name}" loading="lazy"
+                     onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22600%22%3E%3Crect width=%22600%22 height=%22600%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%22300%22 y=%22300%22 font-family=%22Arial%22 font-size=%2218%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 fill=%22%23666%22%3E${encodeURIComponent(product.name)}%3C/text%3E%3C/svg%3E';">
                 <div class="product-overlay">
                     <button class="view-product" data-id="${product.id}">Ver Detalles</button>
                 </div>
