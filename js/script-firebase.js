@@ -942,30 +942,34 @@ function showNotification(message, type = 'success') {
     }, 3000);
 }
 
-// Inicializar eventos - SIMPLIFICADO PARA MÓVILES
+// Inicializar eventos - OPTIMIZADO PARA MÓVILES
 function initEvents() {
     console.log("Inicializando eventos optimizados para móviles...");
+    
+    // Usar eventos de pointer para mejor compatibilidad
+    const supportsPointerEvents = ('PointerEvent' in window);
+    const eventType = supportsPointerEvents ? 'pointerdown' : 'touchstart';
     
     // Función para manejar clics de manera unificada
     function setupClickHandler(element, callback) {
         if (!element) return;
         
+        // Usar click para desktop y touchstart para móviles
         element.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
             callback(e);
         });
         
-        // También manejar touchstart para mejor respuesta en móviles
+        // Para móviles, también usar touchstart pero sin prevenir scroll
         element.addEventListener('touchstart', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            // Agregar feedback visual
-            this.classList.add('tap-feedback');
-            setTimeout(() => {
-                this.classList.remove('tap-feedback');
-            }, 200);
-        }, { passive: false });
+            // Solo prevenir si es un botón que no debería scrollar
+            if (this.tagName === 'BUTTON' || this.classList.contains('add-to-cart') || 
+                this.classList.contains('view-product') || this.classList.contains('filter-btn')) {
+                e.stopPropagation();
+            }
+            // No preventDefault() para permitir scroll natural
+        }, { passive: true });
     }
     
     // Sidebar
@@ -1003,10 +1007,16 @@ function initEvents() {
     });
     
     // Overlay - cierra todo
-    setupClickHandler(overlay, function(e) {
-        console.log("Clic en overlay, cerrando todo");
-        closeAllModals();
-    });
+    if (overlay) {
+        overlay.addEventListener('click', function(e) {
+            console.log("Clic en overlay, cerrando todo");
+            closeAllModals();
+        });
+        
+        overlay.addEventListener('touchstart', function(e) {
+            closeAllModals();
+        }, { passive: true });
+    }
     
     // Modal de producto
     setupClickHandler(closeProductModal, function(e) {
@@ -1073,6 +1083,13 @@ function initEvents() {
                 closeProductModalFunc();
             }
         });
+        
+        // También cerrar con toque
+        productModal.addEventListener('touchstart', function(e) {
+            if (e.target === productModal) {
+                closeProductModalFunc();
+            }
+        }, { passive: true });
     }
     
     // Configurar delegación de eventos optimizada
@@ -1081,12 +1098,31 @@ function initEvents() {
     console.log("Eventos inicializados correctamente");
 }
 
-// Configurar delegación de eventos SIMPLIFICADA
+// Configurar delegación de eventos OPTIMIZADA PARA TOUCH
 function setupEventDelegation() {
-    console.log("Configurando delegación de eventos simplificada...");
+    console.log("Configurando delegación de eventos optimizada para touch...");
     
-    // Función para manejar clics con prevención de comportamiento por defecto
+    // Usar eventos de pointer si están disponibles
+    const supportsPointerEvents = ('PointerEvent' in window);
+    const downEvent = supportsPointerEvents ? 'pointerdown' : 'mousedown';
+    const upEvent = supportsPointerEvents ? 'pointerup' : 'mouseup';
+    
+    // Escuchar eventos táctiles y de clic
     document.addEventListener('click', function(e) {
+        handleDelegatedClick(e);
+    });
+    
+    // También manejar touchstart para respuesta más rápida en móviles
+    document.addEventListener('touchstart', function(e) {
+        // Solo manejar si es un elemento interactivo
+        const target = e.target;
+        if (target.closest('.view-product, .add-to-cart, [data-category], .filter-btn, .category-card')) {
+            e.stopPropagation();
+        }
+    }, { passive: true });
+    
+    // Función para manejar clics delegados
+    function handleDelegatedClick(e) {
         // Ver detalles del producto
         if (e.target.closest('.view-product')) {
             e.preventDefault();
@@ -1143,9 +1179,12 @@ function setupEventDelegation() {
             
             filterProducts(category);
         }
-        
+    }
+    
+    // Delegación dinámica para carrito (se recrea al actualizar)
+    document.addEventListener('click', function(e) {
         // Carrito - acciones (delegación dinámica)
-        else if (e.target.closest('.decrease-quantity')) {
+        if (e.target.closest('.decrease-quantity')) {
             e.stopPropagation();
             const btn = e.target.closest('.decrease-quantity');
             const productId = btn.getAttribute('data-id');
@@ -1167,23 +1206,37 @@ function setupEventDelegation() {
         }
     });
     
-    // Mejorar respuesta táctil en móviles
+    // Mejorar respuesta táctil en móviles sin interferir con scroll
     document.addEventListener('touchstart', function(e) {
-        // Solo para elementos interactivos
+        // Solo para elementos interactivos - no prevenir scroll
         const target = e.target;
-        const isInteractive = target.closest('button, a, [onclick], .view-product, .add-to-cart, .category-card');
+        const isInteractive = target.closest('button, a, [onclick], .view-product, .add-to-cart, .category-card, .filter-btn');
         
         if (isInteractive) {
-            // Agregar feedback visual
-            const element = target.closest('button, a, .view-product, .add-to-cart, .category-card');
+            // Agregar feedback visual ligero
+            const element = target.closest('button, a, .view-product, .add-to-cart, .category-card, .filter-btn');
             if (element) {
-                element.classList.add('tap-feedback');
+                element.style.opacity = '0.8';
+                element.style.transform = 'scale(0.98)';
+                
+                // Restaurar después de un tiempo
                 setTimeout(() => {
-                    element.classList.remove('tap-feedback');
-                }, 200);
+                    element.style.opacity = '';
+                    element.style.transform = '';
+                }, 150);
             }
         }
     }, { passive: true });
+    
+    // Prevenir zoom en iOS al hacer doble toque
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(e) {
+        const now = (new Date()).getTime();
+        if (now - lastTouchEnd <= 300) {
+            e.preventDefault();
+        }
+        lastTouchEnd = now;
+    }, { passive: false });
 }
 
 // Función para cerrar todos los modales

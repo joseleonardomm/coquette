@@ -162,6 +162,117 @@
                 height: 45px;
             }
         }
+        
+        /* CORRECCIONES ESPECÍFICAS PARA TOUCH EN MÓVILES */
+        body {
+            -webkit-overflow-scrolling: touch !important;
+            overflow-y: auto !important;
+            position: relative !important;
+        }
+        
+        /* Solucionar problema de scroll bloqueado en iOS */
+        html, body {
+            height: 100%;
+            width: 100%;
+            position: relative;
+        }
+        
+        /* Permitir scroll natural en todas las páginas */
+        html {
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* Mejorar respuesta táctil para todos los elementos interactivos */
+        button, 
+        a, 
+        input[type="button"],
+        input[type="submit"],
+        [role="button"],
+        .add-to-cart,
+        .view-product,
+        .filter-btn,
+        .quantity-btn,
+        .menu-toggle,
+        .cart-btn,
+        .close-sidebar,
+        .close-cart,
+        .close-product-modal {
+            touch-action: manipulation !important;
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1) !important;
+            cursor: pointer;
+        }
+        
+        /* Feedback táctil más claro */
+        button:active,
+        a:active,
+        .add-to-cart:active,
+        .view-product:active,
+        .filter-btn:active,
+        .quantity-btn:active,
+        .menu-toggle:active,
+        .cart-btn:active {
+            opacity: 0.8 !important;
+            transform: scale(0.98) !important;
+            transition: transform 0.1s ease, opacity 0.1s ease !important;
+        }
+        
+        /* Permitir scroll en áreas de contenido */
+        .main-content {
+            touch-action: pan-y !important;
+            -webkit-overflow-scrolling: touch !important;
+        }
+        
+        /* Mejorar scroll en grids de productos y categorías */
+        .categories-grid,
+        .products-grid {
+            touch-action: pan-y !important;
+        }
+        
+        /* Corregir problemas de scroll en iOS */
+        @supports (-webkit-touch-callout: none) {
+            body {
+                /* iOS específico */
+                position: relative;
+                overflow-y: scroll !important;
+                -webkit-overflow-scrolling: touch !important;
+            }
+            
+            .container {
+                padding-bottom: env(safe-area-inset-bottom);
+            }
+            
+            /* Asegurar que los inputs no se zoom */
+            input[type="text"],
+            input[type="number"],
+            input[type="search"],
+            select,
+            textarea {
+                font-size: 16px !important;
+            }
+        }
+        
+        /* Prevenir selección de texto durante desplazamiento */
+        .category-card,
+        .product-card,
+        .filter-btn,
+        button {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        /* Mejorar visibilidad de elementos activos */
+        :active {
+            outline: none !important;
+        }
+        
+        /* Asegurar que los enlaces sean fáciles de tocar */
+        a {
+            display: inline-block;
+            padding: 8px 0;
+        }
     </style>
 </head>
 <body>
@@ -421,22 +532,24 @@
                 event.preventDefault();
             }
             lastTouchEnd = now;
-        }, { passive: false });
+        }, false);
         
         // Mejorar respuesta táctil en móviles
         document.addEventListener('DOMContentLoaded', function() {
-            // Agregar clase de feedback táctil a todos los botones
+            // Agregar feedback táctil a todos los botones
             const buttons = document.querySelectorAll('button, .add-to-cart, .view-product, .filter-btn');
             buttons.forEach(button => {
                 button.addEventListener('touchstart', function() {
-                    this.classList.add('tap-feedback');
-                });
+                    this.style.opacity = '0.8';
+                    this.style.transform = 'scale(0.98)';
+                }, { passive: true });
                 
                 button.addEventListener('touchend', function() {
                     setTimeout(() => {
-                        this.classList.remove('tap-feedback');
-                    }, 200);
-                });
+                        this.style.opacity = '';
+                        this.style.transform = '';
+                    }, 150);
+                }, { passive: true });
             });
             
             // Asegurar que los inputs sean fáciles de usar en móviles
@@ -452,13 +565,33 @@
                 });
             });
             
-            // Prevenir pull-to-refresh en iOS
+            // Permitir scroll natural en iOS
             document.addEventListener('touchmove', function(event) {
-                if (event.scale !== 1) {
+                // Solo prevenir si estamos dentro de un elemento que no debe scrollar
+                if (event.target.closest('.menu-toggle, .cart-btn, .close-sidebar, .close-cart, .close-product-modal')) {
                     event.preventDefault();
                 }
             }, { passive: false });
         });
+        
+        // Función para manejar scroll suave en navegadores que no lo soportan nativamente
+        if (!('scrollBehavior' in document.documentElement.style)) {
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    if (targetId === '#') return;
+                    
+                    const targetElement = document.querySelector(targetId);
+                    if (targetElement) {
+                        targetElement.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+        }
     </script>
 </body>
 </html>
