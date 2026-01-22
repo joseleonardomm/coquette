@@ -102,6 +102,37 @@
             margin-right: 10px;
         }
         
+        /* Botón flotante para admin en móviles */
+        #mobile-admin-btn {
+            position: fixed;
+            bottom: 80px;
+            right: 15px;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #C5A451 0%, #d4b668 100%);
+            color: #000;
+            border: none;
+            border-radius: 50%;
+            z-index: 1002;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(197, 164, 81, 0.4);
+            opacity: 0.3;
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        
+        #mobile-admin-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+        
+        #mobile-admin-btn:active {
+            transform: scale(0.95);
+        }
+        
         /* Campo oculto para capturar entrada en móviles */
         .hidden-input {
             position: fixed;
@@ -112,10 +143,32 @@
             opacity: 0;
             pointer-events: none;
         }
+        
+        /* Mejoras para inputs en móviles */
+        @media (max-width: 768px) {
+            .notification {
+                top: 20px;
+                right: 20px;
+                left: 20px;
+                text-align: center;
+                justify-content: center;
+            }
+            
+            #mobile-admin-btn {
+                opacity: 0.7;
+                bottom: 70px;
+                right: 10px;
+                width: 45px;
+                height: 45px;
+            }
+        }
     </style>
 </head>
 <body>
-    <!-- Sistema de acceso al admin - Mejorado para móviles -->
+    <!-- Botón flotante para acceso al admin en móviles -->
+    <!-- Se creará dinámicamente en script-firebase.js -->
+
+    <!-- Campo oculto para capturar entrada en móviles -->
     <input type="text" id="admin-access-input" class="hidden-input" placeholder="Escribe aquí para acceder al admin">
 
     <!-- Barra lateral -->
@@ -356,9 +409,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
-    <!-- Configuración de Firebase -->
-    <script src="js/firebase-config.js"></script>
-
     <!-- Script principal con Firebase (Versión corregida para móviles) -->
     <script src="js/script-firebase.js"></script>
 
@@ -372,6 +422,43 @@
             }
             lastTouchEnd = now;
         }, { passive: false });
+        
+        // Mejorar respuesta táctil en móviles
+        document.addEventListener('DOMContentLoaded', function() {
+            // Agregar clase de feedback táctil a todos los botones
+            const buttons = document.querySelectorAll('button, .add-to-cart, .view-product, .filter-btn');
+            buttons.forEach(button => {
+                button.addEventListener('touchstart', function() {
+                    this.classList.add('tap-feedback');
+                });
+                
+                button.addEventListener('touchend', function() {
+                    setTimeout(() => {
+                        this.classList.remove('tap-feedback');
+                    }, 200);
+                });
+            });
+            
+            // Asegurar que los inputs sean fáciles de usar en móviles
+            const inputs = document.querySelectorAll('input, textarea, select');
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    // En móviles, desplazar un poco hacia arriba para que no quede oculto
+                    if (window.innerWidth <= 768) {
+                        setTimeout(() => {
+                            this.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }, 300);
+                    }
+                });
+            });
+            
+            // Prevenir pull-to-refresh en iOS
+            document.addEventListener('touchmove', function(event) {
+                if (event.scale !== 1) {
+                    event.preventDefault();
+                }
+            }, { passive: false });
+        });
     </script>
 </body>
 </html>
