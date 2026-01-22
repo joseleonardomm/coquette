@@ -1,4 +1,4 @@
-// script-firebase.js - OPTIMIZADO PARA MÓVILES
+// script-firebase.js - COMPLETAMENTE FUNCIONAL PARA MÓVILES
 // Tienda principal con Firebase Realtime Database
 
 // Datos iniciales
@@ -17,12 +17,6 @@ let heroSlides = [];
 // Carrito de compras
 let cart = [];
 
-// Variables para control de eventos táctiles
-let isScrolling = false;
-let scrollTimeout;
-let lastClickTime = 0;
-const CLICK_DELAY = 300; // 300ms entre clics
-
 // Variables para acceso al admin
 let adminInputSequence = '';
 const ADMIN_PASSWORD = 'abuelamia';
@@ -31,17 +25,16 @@ const ADMIN_PASSWORD = 'abuelamia';
 let sidebar, overlay, menuToggle, closeSidebar, cartSidebar, cartBtn, closeCart;
 let cartItems, cartTotal, cartCount, checkoutBtn, productModal, closeProductModal;
 let searchInput, searchButton;
-let adminAccessInput;
 
 // Inicializar la aplicación
 document.addEventListener('DOMContentLoaded', async function() {
     console.log("DOM cargado, inicializando aplicación con Firebase...");
     
-    // Inicializar referencias a elementos del DOM
-    initializeDOMElements();
-    
     // Configurar acceso al admin (DEBE IR ANTES DE CUALQUIER OTRA COSA)
     setupAdminAccess();
+    
+    // Inicializar referencias a elementos del DOM
+    initializeDOMElements();
     
     // Inicializar Firebase
     const firebaseInitialized = await initializeFirebase();
@@ -172,89 +165,35 @@ async function loadFirebaseSDK() {
     });
 }
 
-// Configurar acceso al admin - MEJORADO Y SIMPLIFICADO
+// Configurar acceso al admin - COMPLETAMENTE SIMPLIFICADO
 function setupAdminAccess() {
-    console.log("Configurando acceso al admin...");
+    console.log("Configurando acceso al admin simplificado...");
     
     // Solo activar en la página principal
     if (window.location.pathname.includes('admin.html')) {
         return;
     }
     
-    // Crear un botón flotante para acceso admin en móviles
+    // Crear botón flotante para acceso admin en móviles
     const adminBtn = document.createElement('button');
     adminBtn.id = 'mobile-admin-btn';
     adminBtn.innerHTML = '<i class="fas fa-lock"></i>';
     adminBtn.title = 'Acceso Administrador';
     document.body.appendChild(adminBtn);
     
-    // Estilos del botón
-    adminBtn.style.cssText = `
-        position: fixed;
-        bottom: 80px;
-        right: 15px;
-        width: 50px;
-        height: 50px;
-        background: linear-gradient(135deg, #C5A451 0%, #d4b668 100%);
-        color: #000;
-        border: none;
-        border-radius: 50%;
-        z-index: 1002;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
-        cursor: pointer;
-        box-shadow: 0 4px 15px rgba(197, 164, 81, 0.4);
-        opacity: 0.3;
-        transition: opacity 0.3s;
-    `;
-    
-    // Mostrar al pasar el mouse/tocar
-    adminBtn.addEventListener('mouseenter', () => {
-        adminBtn.style.opacity = '1';
-    });
-    adminBtn.addEventListener('mouseleave', () => {
-        adminBtn.style.opacity = '0.3';
-    });
-    
-    // Para móviles: mostrar completamente al tocar
-    adminBtn.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        adminBtn.style.opacity = '1';
-        setTimeout(() => {
-            adminBtn.style.opacity = '0.3';
-        }, 1000);
-    });
-    
-    // Evento para activar acceso admin (3 clics)
-    let adminClickCount = 0;
-    let lastAdminClickTime = 0;
-    
+    // Evento para activar acceso admin
     adminBtn.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
         
-        const currentTime = new Date().getTime();
+        console.log("Botón admin tocado");
         
-        // Si pasó más de 1 segundo, reiniciar contador
-        if (currentTime - lastAdminClickTime > 1000) {
-            adminClickCount = 0;
-        }
-        
-        adminClickCount++;
-        lastAdminClickTime = currentTime;
-        
-        console.log(`Clic admin: ${adminClickCount}/3`);
-        
-        if (adminClickCount >= 3) {
-            const password = prompt('Ingrese la contraseña de administrador:');
-            if (password === ADMIN_PASSWORD) {
-                window.location.href = 'admin.html';
-            } else {
-                alert('Contraseña incorrecta');
-            }
-            adminClickCount = 0;
+        // Usar método simple: preguntar contraseña directamente
+        const password = prompt('Ingrese la contraseña de administrador:');
+        if (password === ADMIN_PASSWORD) {
+            window.location.href = 'admin.html';
+        } else if (password) {
+            alert('Contraseña incorrecta');
         }
     });
     
@@ -270,6 +209,8 @@ function setupAdminAccess() {
             if (adminInputSequence.length > ADMIN_PASSWORD.length) {
                 adminInputSequence = adminInputSequence.substring(1);
             }
+            
+            console.log("Secuencia admin:", adminInputSequence);
             
             if (adminInputSequence === ADMIN_PASSWORD) {
                 window.location.href = 'admin.html';
@@ -406,6 +347,17 @@ function loadDefaultData() {
                 "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
                 "https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
             ]
+        },
+        { 
+            id: 'prod3', 
+            name: "Pantalón Deportivo Elite", 
+            category: "Ropa Deportiva", 
+            price: 39.99, 
+            originalPrice: 49.99,
+            description: "Pantalón deportivo con tecnología de secado rápido y máxima flexibilidad.",
+            images: [
+                "https://images.unsplash.com/photo-1552902865-b72c031ac5ea?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+            ]
         }
     ];
     
@@ -414,6 +366,12 @@ function loadDefaultData() {
             id: 'slide1',
             title: "Ropa Deportiva de Alta Calidad", 
             description: "Equípate con lo mejor para tus entrenamientos",
+            image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" 
+        },
+        { 
+            id: 'slide2',
+            title: "Nueva Colección 2024", 
+            description: "Descubre nuestras últimas novedades",
             image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" 
         }
     ];
@@ -575,8 +533,7 @@ function renderProducts(filter = 'all') {
         productCard.innerHTML = `
             <div class="product-image">
                 <img src="${firstImage}" alt="${product.name}" loading="lazy" 
-                     onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22600%22%3E%3Crect width=%22600%22 height=%22600%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%22300%22 y=%22300%22 font-family=%22Arial%22 font-size=%2218%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 fill=%22%23666%22%3E${encodeURIComponent(product.name)}%3C/text%3E%3C/svg%3E';">">
-                <div class="product-overlay">
+                     onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22600%22%3E%3Crect width=%22600%22 height=%22600%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%22300%22 y=%22300%22 font-family=%22Arial%22 font-size=%2218%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 fill=%22%23666%22%3E${encodeURIComponent(product.name)}%3C/text%3E%3C/svg%3E';">                <div class="product-overlay">
                     <button class="view-product" data-id="${product.id}">Ver Detalles</button>
                 </div>
             </div>
@@ -658,7 +615,7 @@ function renderHeroSlides() {
     });
 }
 
-// Abrir modal de producto - CORREGIDO
+// Abrir modal de producto - CORREGIDO PARA MÓVILES
 function openProductModal(productId) {
     console.log("Abriendo modal para producto ID:", productId);
     
@@ -731,7 +688,17 @@ function openProductModal(productId) {
     
     // Configurar cantidad
     const quantityInput = document.getElementById('modal-quantity');
-    if (quantityInput) quantityInput.value = 1;
+    if (quantityInput) {
+        quantityInput.value = 1;
+        // Mejorar para móviles
+        quantityInput.addEventListener('focus', function() {
+            if (window.innerWidth <= 768) {
+                setTimeout(() => {
+                    this.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 300);
+            }
+        });
+    }
     
     // Configurar botón de agregar al carrito
     const addToCartBtn = document.getElementById('modal-add-to-cart');
@@ -815,8 +782,7 @@ function updateCart() {
             cartItem.className = 'cart-item';
             cartItem.innerHTML = `
                 <img src="${item.image}" alt="${item.name}" class="cart-item-image" 
-                     onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%2250%22 y=%2250%22 font-family=%22Arial%22 font-size=%2212%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 fill=%22%23666%22%3E${encodeURIComponent(item.name)}%3C/text%3E%3C/svg%3E';">">
-                <div class="cart-item-details">
+                     onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%2250%22 y=%2250%22 font-family=%22Arial%22 font-size=%2212%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 fill=%22%23666%22%3E${encodeURIComponent(item.name)}%3C/text%3E%3C/svg%3E';">                <div class="cart-item-details">
                     <h4 class="cart-item-title">${item.name}</h4>
                     <p class="cart-item-price">$${(item.price * (item.quantity || 1)).toFixed(2)}</p>
                     <div class="cart-item-actions">
@@ -976,99 +942,88 @@ function showNotification(message, type = 'success') {
     }, 3000);
 }
 
-// Inicializar eventos optimizados para móviles
+// Inicializar eventos - SIMPLIFICADO PARA MÓVILES
 function initEvents() {
     console.log("Inicializando eventos optimizados para móviles...");
     
-    // Función para manejar toques/clics de manera unificada
-    function handleInteraction(element, callback) {
-        element.addEventListener('touchstart', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            callback(e);
-        }, { passive: false });
+    // Función para manejar clics de manera unificada
+    function setupClickHandler(element, callback) {
+        if (!element) return;
         
         element.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
             callback(e);
         });
+        
+        // También manejar touchstart para mejor respuesta en móviles
+        element.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            // Agregar feedback visual
+            this.classList.add('tap-feedback');
+            setTimeout(() => {
+                this.classList.remove('tap-feedback');
+            }, 200);
+        }, { passive: false });
     }
     
     // Sidebar
-    if (menuToggle) {
-        handleInteraction(menuToggle, function(e) {
-            console.log("Abriendo sidebar");
-            document.body.classList.add('sidebar-open');
-            if (sidebar) sidebar.classList.add('open');
-            if (overlay) {
-                overlay.classList.add('active');
-                overlay.style.zIndex = '999';
-            }
-        });
-    }
+    setupClickHandler(menuToggle, function(e) {
+        console.log("Abriendo sidebar");
+        document.body.classList.add('sidebar-open');
+        if (sidebar) sidebar.classList.add('open');
+        if (overlay) {
+            overlay.classList.add('active');
+            overlay.style.zIndex = '999';
+        }
+    });
     
-    if (closeSidebar) {
-        handleInteraction(closeSidebar, function(e) {
-            console.log("Cerrando sidebar");
-            document.body.classList.remove('sidebar-open');
-            if (sidebar) sidebar.classList.remove('open');
-            if (overlay) {
-                overlay.classList.remove('active');
-                overlay.style.zIndex = '';
-            }
-        });
-    }
+    setupClickHandler(closeSidebar, function(e) {
+        console.log("Cerrando sidebar");
+        document.body.classList.remove('sidebar-open');
+        if (sidebar) sidebar.classList.remove('open');
+        if (overlay) {
+            overlay.classList.remove('active');
+            overlay.style.zIndex = '';
+        }
+    });
     
     // Carrito
-    if (cartBtn) {
-        handleInteraction(cartBtn, function(e) {
-            console.log("Abriendo carrito");
-            document.body.classList.add('cart-open');
-            if (cartSidebar) cartSidebar.classList.add('open');
-        });
-    }
+    setupClickHandler(cartBtn, function(e) {
+        console.log("Abriendo carrito");
+        document.body.classList.add('cart-open');
+        if (cartSidebar) cartSidebar.classList.add('open');
+    });
     
-    if (closeCart) {
-        handleInteraction(closeCart, function(e) {
-            console.log("Cerrando carrito");
-            document.body.classList.remove('cart-open');
-            if (cartSidebar) cartSidebar.classList.remove('open');
-        });
-    }
+    setupClickHandler(closeCart, function(e) {
+        console.log("Cerrando carrito");
+        document.body.classList.remove('cart-open');
+        if (cartSidebar) cartSidebar.classList.remove('open');
+    });
     
     // Overlay - cierra todo
-    if (overlay) {
-        handleInteraction(overlay, function(e) {
-            console.log("Clic en overlay, cerrando todo");
-            closeAllModals();
-        });
-    }
+    setupClickHandler(overlay, function(e) {
+        console.log("Clic en overlay, cerrando todo");
+        closeAllModals();
+    });
     
     // Modal de producto
-    if (closeProductModal) {
-        handleInteraction(closeProductModal, function(e) {
-            console.log("Cerrando modal de producto");
-            closeProductModalFunc();
-        });
-    }
+    setupClickHandler(closeProductModal, function(e) {
+        console.log("Cerrando modal de producto");
+        closeProductModalFunc();
+    });
     
-    // Cerrar modal al hacer clic fuera
-    if (productModal) {
-        productModal.addEventListener('click', function(e) {
-            if (e.target === productModal) {
-                console.log("Clic fuera del modal, cerrando");
-                closeProductModalFunc();
-            }
-        });
-    }
+    // Botón de checkout
+    setupClickHandler(checkoutBtn, function(e) {
+        console.log("Realizando checkout");
+        completeOrder();
+    });
     
     // Buscador
-    if (searchButton) {
-        handleInteraction(searchButton, function(e) {
-            performSearch();
-        });
-    }
+    setupClickHandler(searchButton, function(e) {
+        performSearch();
+    });
     
     // Input de búsqueda - permitir enter
     if (searchInput) {
@@ -1079,47 +1034,44 @@ function initEvents() {
         });
     }
     
-    // Agregar al carrito desde el modal
-    const modalAddToCartBtn = document.getElementById('modal-add-to-cart');
-    if (modalAddToCartBtn) {
-        handleInteraction(modalAddToCartBtn, function(e) {
-            const productId = this.getAttribute('data-id');
-            const quantityInput = document.getElementById('modal-quantity');
-            const quantity = quantityInput ? parseInt(quantityInput.value) || 1 : 1;
-            
-            console.log("Agregando al carrito desde modal:", productId, quantity);
-            addToCart(productId, quantity);
-            
-            closeProductModalFunc();
-        });
-    }
-    
-    // Botones de cantidad en modal
+    // Modal - botones de cantidad
     const minusBtn = document.querySelector('.quantity-btn.minus');
     const plusBtn = document.querySelector('.quantity-btn.plus');
     
-    if (minusBtn) {
-        handleInteraction(minusBtn, function(e) {
-            const quantityInput = document.getElementById('modal-quantity');
-            if (quantityInput && quantityInput.value > 1) {
-                quantityInput.value = parseInt(quantityInput.value) - 1;
-            }
-        });
-    }
+    setupClickHandler(minusBtn, function(e) {
+        const quantityInput = document.getElementById('modal-quantity');
+        if (quantityInput && quantityInput.value > 1) {
+            quantityInput.value = parseInt(quantityInput.value) - 1;
+        }
+    });
     
-    if (plusBtn) {
-        handleInteraction(plusBtn, function(e) {
-            const quantityInput = document.getElementById('modal-quantity');
-            if (quantityInput && quantityInput.value < 10) {
-                quantityInput.value = parseInt(quantityInput.value) + 1;
-            }
-        });
-    }
+    setupClickHandler(plusBtn, function(e) {
+        const quantityInput = document.getElementById('modal-quantity');
+        if (quantityInput && quantityInput.value < 10) {
+            quantityInput.value = parseInt(quantityInput.value) + 1;
+        }
+    });
     
-    // Botón de checkout
-    if (checkoutBtn) {
-        handleInteraction(checkoutBtn, function(e) {
-            completeOrder();
+    // Modal - agregar al carrito
+    const modalAddToCartBtn = document.getElementById('modal-add-to-cart');
+    setupClickHandler(modalAddToCartBtn, function(e) {
+        const productId = this.getAttribute('data-id');
+        const quantityInput = document.getElementById('modal-quantity');
+        const quantity = quantityInput ? parseInt(quantityInput.value) || 1 : 1;
+        
+        console.log("Agregando al carrito desde modal:", productId, quantity);
+        addToCart(productId, quantity);
+        
+        closeProductModalFunc();
+    });
+    
+    // Cerrar modal al hacer clic fuera
+    if (productModal) {
+        productModal.addEventListener('click', function(e) {
+            if (e.target === productModal) {
+                console.log("Clic fuera del modal, cerrando");
+                closeProductModalFunc();
+            }
         });
     }
     
@@ -1133,7 +1085,7 @@ function initEvents() {
 function setupEventDelegation() {
     console.log("Configurando delegación de eventos simplificada...");
     
-    // Usar un solo event listener para todo
+    // Función para manejar clics con prevención de comportamiento por defecto
     document.addEventListener('click', function(e) {
         // Ver detalles del producto
         if (e.target.closest('.view-product')) {
@@ -1192,7 +1144,7 @@ function setupEventDelegation() {
             filterProducts(category);
         }
         
-        // Carrito - acciones
+        // Carrito - acciones (delegación dinámica)
         else if (e.target.closest('.decrease-quantity')) {
             e.stopPropagation();
             const btn = e.target.closest('.decrease-quantity');
@@ -1215,19 +1167,19 @@ function setupEventDelegation() {
         }
     });
     
-    // También manejar touchstart para mejor respuesta en móviles
+    // Mejorar respuesta táctil en móviles
     document.addEventListener('touchstart', function(e) {
         // Solo para elementos interactivos
         const target = e.target;
-        const isInteractive = target.closest('button, a, [onclick], .view-product, .add-to-cart');
+        const isInteractive = target.closest('button, a, [onclick], .view-product, .add-to-cart, .category-card');
         
         if (isInteractive) {
             // Agregar feedback visual
-            const element = target.closest('button, a, .view-product, .add-to-cart');
+            const element = target.closest('button, a, .view-product, .add-to-cart, .category-card');
             if (element) {
-                element.style.transform = 'scale(0.95)';
+                element.classList.add('tap-feedback');
                 setTimeout(() => {
-                    element.style.transform = '';
+                    element.classList.remove('tap-feedback');
                 }, 200);
             }
         }
@@ -1302,8 +1254,7 @@ function performSearch() {
         productCard.innerHTML = `
             <div class="product-image">
                 <img src="${firstImage}" alt="${product.name}" loading="lazy"
-                     onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22600%22%3E%3Crect width=%22600%22 height=%22600%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%22300%22 y=%22300%22 font-family=%22Arial%22 font-size=%2218%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 fill=%22%23666%22%3E${encodeURIComponent(product.name)}%3C/text%3E%3C/svg%3E';">">
-                <div class="product-overlay">
+                     onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22600%22%3E%3Crect width=%22600%22 height=%22600%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%22300%22 y=%22300%22 font-family=%22Arial%22 font-size=%2218%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 fill=%22%23666%22%3E${encodeURIComponent(product.name)}%3C/text%3E%3C/svg%3E';">                <div class="product-overlay">
                     <button class="view-product" data-id="${product.id}">Ver Detalles</button>
                 </div>
             </div>
@@ -1361,4 +1312,6 @@ if (typeof window !== 'undefined') {
     window.debugCart = () => console.log('Carrito:', cart);
     window.debugProducts = () => console.log('Productos:', products);
     window.debugCategories = () => console.log('Categorías:', categories);
+    window.openProductModal = openProductModal;
+    window.addToCart = addToCart;
 }

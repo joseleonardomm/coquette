@@ -5,7 +5,7 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent !important;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1) !important;
 }
 
 html {
@@ -2001,6 +2001,11 @@ body.modal-open {
         min-height: 44px !important;
         padding: 12px 16px !important;
     }
+    
+    /* FEEDBACK TÁCTIL MEJORADO */
+    .tap-feedback {
+        animation: tapFeedback 0.2s ease !important;
+    }
 }
 
 @media (max-width: 576px) {
@@ -2387,5 +2392,144 @@ textarea {
     .sidebar-content {
         -webkit-overflow-scrolling: touch !important;
         overscroll-behavior: contain !important;
+    }
+}
+
+/* ==========================================
+   ANIMACIÓN DE FEEDBACK TÁCTIL
+   ========================================== */
+@keyframes tapFeedback {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(0.95); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.tap-feedback {
+    animation: tapFeedback 0.2s ease;
+}
+
+/* ==========================================
+   MEJORAS ESPECÍFICAS PARA MÓVILES
+   ========================================== */
+@media (max-width: 768px) {
+    /* Asegurar que los botones sean fácilmente tocables */
+    button, 
+    .add-to-cart, 
+    .view-product, 
+    .filter-btn,
+    .quantity-btn,
+    .close-sidebar,
+    .close-cart,
+    .close-product-modal,
+    #menu-toggle,
+    #cart-btn {
+        min-height: 44px !important;
+        min-width: 44px !important;
+        padding: 12px 20px !important;
+    }
+    
+    /* Productos - hacer más fácil tocar */
+    .product-card {
+        padding: 5px;
+    }
+    
+    .product-info {
+        padding: 15px !important;
+    }
+    
+    /* Asegurar que los botones sean fáciles de tocar */
+    .add-to-cart, .view-product {
+        font-size: 16px !important;
+        font-weight: 600;
+        display: block;
+        width: 100%;
+        margin-top: 10px;
+    }
+    
+    /* Mejorar modal para móviles */
+    .product-modal-content {
+        max-height: 90vh !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    .product-modal-body {
+        display: flex !important;
+        flex-direction: column !important;
+        padding: 20px !important;
+        gap: 20px !important;
+    }
+    
+    .main-image {
+        height: 300px !important;
+    }
+    
+    /* Inputs más grandes para dedos */
+    input[type="text"],
+    input[type="number"],
+    input[type="search"] {
+        min-height: 44px !important;
+        font-size: 16px !important;
+        padding: 12px 15px !important;
+    }
+    
+    /* Prevenir zoom en inputs en iOS */
+    @supports (-webkit-touch-callout: none) {
+        input, textarea, select {
+            font-size: 16px !important;
+        }
+    }
+}
+
+/* Asegurar que todos los botones sean táctiles */
+button, 
+[role="button"] {
+    cursor: pointer !important;
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+}
+
+/* Mejorar feedback táctil */
+button:active,
+.add-to-cart:active,
+.view-product:active {
+    transform: scale(0.95) !important;
+    transition: transform 0.1s !important;
+}
+
+/* Asegurar que los enlaces sean fáciles de tocar */
+a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 0;
+}
+
+/* Corregir overflow en móviles */
+@media (max-width: 768px) {
+    body, html {
+        overflow-x: hidden !important;
+        width: 100% !important;
+        position: relative !important;
+    }
+    
+    .container {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+}
+
+/* Mejorar visualización de productos en móviles */
+@media (max-width: 768px) {
+    .product-overlay {
+        display: flex !important;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+    
+    .product-card:active .product-overlay {
+        opacity: 1;
     }
 }
